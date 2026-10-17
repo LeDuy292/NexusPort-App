@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Pressable,
 } from "react-native";
+import { useState, useEffect } from "react";
 import { router } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/features/auth/AuthProvider";

@@ -8,11 +8,14 @@ import {
   Platform,
   ActivityIndicator,
   Pressable,
+  Modal,
 } from "react-native";
 import { useState } from "react";
 import { useAuth } from "../../src/features/auth/AuthProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+
+const DEFAULT_BASE = Platform.OS === "android" ? "http://10.0.2.2:3001" : "http://localhost:3001";
 
 const ROLES = [
   {
@@ -63,12 +66,63 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Cấu hình URL máy chủ backend
+  const [apiBaseUrl, setApiBaseUrl] = useState(DEFAULT_BASE);
+  const [showServerModal, setShowServerModal] = useState(false);
+  const [tempBaseUrl, setTempBaseUrl] = useState(DEFAULT_BASE);
+  const [serverTesting, setServerTesting] = useState(false);
+  const [serverStatusMsg, setServerStatusMsg] = useState("");
+
+  useEffect(() => {
+    AsyncStorage.getItem("api_base_url").then((saved) => {
+      if (saved) {
+        setApiBaseUrl(saved);
+        setTempBaseUrl(saved);
+      }
+    });
+  }, []);
+
   const handleSelectRole = (role: (typeof ROLES)[0]) => {
     setSelectedRole(role);
+    setUsername(role.defaultUsername || "");
+    setPassword("NexusPort@2026");
     setStep(2);
     setError("");
   };
 
+  const getBase = async (): Promise<string> => {
+    const saved = await AsyncStorage.getItem("api_base_url");
+    return (saved || apiBaseUrl || DEFAULT_BASE).replace(/\/$/, "");
+  };
+
+  const testServerConnection = async () => {
+    setServerTesting(true);
+    setServerStatusMsg("");
+    try {
+      const url = tempBaseUrl.replace(/\/$/, "");
+      const res = await fetch(`${url}/api/health`, { method: "GET" });
+      if (res.ok) {
+        setServerStatusMsg("✅ Kết nối máy chủ thành công!");
+      } else {
+        setServerStatusMsg(`⚠️ Máy chủ phản hồi mã lỗi HTTP ${res.status}`);
+      }
+    } catch (err: any) {
+      setServerStatusMsg("❌ Không thể kết nối đến máy chủ: " + (err.message || "Network request failed"));
+    } finally {
+      setServerTesting(false);
+    }
+  };
+
+  const saveServerUrl = async () => {
+    const cleanUrl = tempBaseUrl.trim().replace(/\/$/, "");
+    setApiBaseUrl(cleanUrl);
+    await AsyncStorage.setItem("api_base_url", cleanUrl);
+    setShowServerModal(false);
+  };
+
+  /**
+   * Đăng nhập thật kết nối trực tiếp đến Backend API PostgreSQL
+   */
   const handleLogin = async () => {
     if (loading || !selectedRole) return;
     if (!username.trim() || !password.trim()) {
@@ -105,10 +159,24 @@ export default function LoginScreen() {
         contentContainerClassName="flex-grow justify-center px-6 py-12"
         keyboardShouldPersistTaps="handled"
       >
+        {/* Nút cài đặt Server IP ở góc trên */}
+        <View className="flex-row justify-end mb-4">
+          <TouchableOpacity
+            onPress={() => setShowServerModal(true)}
+            className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full"
+            style={{ backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }}
+          >
+            <Ionicons name="server-outline" size={13} color="rgba(255,255,255,0.6)" />
+            <Text className="text-white/60 text-xs font-medium">Máy chủ API</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Logo */}
-        <View className="items-center mb-10">
-          <View className="w-14 h-14 bg-signal rounded-2xl items-center justify-center mb-4 shadow-lg"
-            style={{ shadowColor: "#ff682c", shadowOpacity: 0.4, shadowRadius: 16 }}>
+        <View className="items-center mb-8">
+          <View
+            className="w-14 h-14 bg-signal rounded-2xl items-center justify-center mb-4 shadow-lg"
+            style={{ shadowColor: "#ff682c", shadowOpacity: 0.4, shadowRadius: 16 }}
+          >
             <MaterialCommunityIcons name="anchor" size={28} color="white" />
           </View>
           <Text className="text-white text-3xl font-bold tracking-tight">
@@ -234,13 +302,13 @@ export default function LoginScreen() {
                 </View>
               </View>
 
-              <Text className="text-white text-xl font-bold mb-1">Đăng nhập</Text>
-              <Text className="text-white/40 text-sm mb-6">Nhập thông tin tài khoản của bạn</Text>
+              <Text className="text-white text-xl font-bold mb-1">Xác thực tài khoản</Text>
+              <Text className="text-white/40 text-sm mb-6">Kiểm tra thông tin đăng nhập với cơ sở dữ liệu cảng</Text>
 
               {/* Username */}
               <View className="mb-4">
                 <Text className="text-white/40 text-[11px] font-semibold uppercase tracking-widest mb-2">
-                  Tên đăng nhập
+                  Tên đăng nhập hoặc Email
                 </Text>
                 <View
                   className="flex-row items-center rounded-xl px-4"
@@ -254,12 +322,11 @@ export default function LoginScreen() {
                   <Ionicons name="person-outline" size={18} color="rgba(255,255,255,0.25)" />
                   <TextInput
                     className="flex-1 text-white text-sm ml-3"
-                    placeholder="nguyen.van.a@nexusport.vn"
+                    placeholder="driver01 hoặc email..."
                     placeholderTextColor="rgba(255,255,255,0.2)"
                     value={username}
                     onChangeText={setUsername}
                     autoCapitalize="none"
-                    keyboardType="email-address"
                   />
                 </View>
               </View>
@@ -299,19 +366,21 @@ export default function LoginScreen() {
 
               {/* Error message */}
               {error ? (
-                <Text className="text-red-400 text-xs mt-1 mb-2">{error}</Text>
+                <View className="bg-red-500/15 border border-red-500/30 rounded-xl p-3 mt-2 mb-3">
+                  <Text className="text-red-400 text-xs leading-5">⚠️ {error}</Text>
+                </View>
               ) : null}
 
-              {/* Forgot password */}
-              <TouchableOpacity className="self-end mb-6">
-                <Text className="text-signal text-xs font-semibold">Quên mật khẩu?</Text>
-              </TouchableOpacity>
+              {/* Server endpoint hint */}
+              <Text className="text-white/30 text-[11px] mb-4 mt-1">
+                Kết nối đến: <Text className="text-white/50">{apiBaseUrl}</Text>
+              </Text>
 
               {/* Login button */}
               <TouchableOpacity
                 onPress={handleLogin}
                 disabled={loading}
-                className="rounded-xl items-center justify-center py-4"
+                className="rounded-xl items-center justify-center py-4 mb-3"
                 style={{
                   backgroundColor: loading ? "rgba(255,104,44,0.4)" : "#ff682c",
                   shadowColor: "#ff682c",
@@ -324,9 +393,25 @@ export default function LoginScreen() {
                   <ActivityIndicator color="white" />
                 ) : (
                   <Text className="text-white font-semibold text-sm">
-                    Đăng nhập vào hệ thống
+                    Đăng nhập hệ thống (API thật)
                   </Text>
                 )}
+              </TouchableOpacity>
+
+              {/* Chế độ Demo / Offline phòng khi máy chưa bật Backend */}
+              <TouchableOpacity
+                onPress={handleDemoLogin}
+                disabled={loading}
+                className="rounded-xl items-center justify-center py-3"
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.1)",
+                }}
+              >
+                <Text className="text-white/60 text-xs font-medium">
+                  ⚡ Vào nhanh chế độ Demo (Offline)
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -334,9 +419,102 @@ export default function LoginScreen() {
 
         {/* Footer */}
         <Text className="text-white/20 text-center text-[11px] mt-8">
-          © 2026 NexusPort Inc. · Phiên bản 1.0.0
+          © 2026 NexusPort Inc. · Hệ thống Quản trị & Điều phối Cảng
         </Text>
       </ScrollView>
+
+      {/* Modal Cấu hình URL Máy chủ API */}
+      <Modal visible={showServerModal} transparent animationType="fade">
+        <View className="flex-1 bg-black/75 justify-center items-center px-6">
+          <View
+            className="w-full max-w-sm rounded-3xl p-6"
+            style={{
+              backgroundColor: "#18181b",
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.12)",
+            }}
+          >
+            <View className="flex-row items-center justify-between mb-4">
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="settings-outline" size={20} color="#ff682c" />
+                <Text className="text-white font-bold text-base">Cấu hình Máy chủ</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowServerModal(false)}>
+                <Ionicons name="close" size={20} color="rgba(255,255,255,0.5)" />
+              </TouchableOpacity>
+            </View>
+
+            <Text className="text-white/60 text-xs mb-3">
+              Nhập địa chỉ máy chủ Backend (Localhost hoặc IP máy tính khi test trên điện thoại thật):
+            </Text>
+
+            <View
+              className="flex-row items-center rounded-xl px-4 mb-3"
+              style={{
+                backgroundColor: "rgba(255,255,255,0.06)",
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.15)",
+                height: 48,
+              }}
+            >
+              <TextInput
+                className="flex-1 text-white text-xs"
+                placeholder="http://192.168.1.10:3001"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                value={tempBaseUrl}
+                onChangeText={setTempBaseUrl}
+                autoCapitalize="none"
+              />
+            </View>
+
+            {/* Nút gợi ý nhanh */}
+            <View className="flex-row flex-wrap gap-2 mb-3">
+              <TouchableOpacity
+                onPress={() => setTempBaseUrl("http://localhost:3001")}
+                className="px-2.5 py-1 rounded-lg"
+                style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+              >
+                <Text className="text-white/60 text-[11px]">localhost:3001</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setTempBaseUrl("http://10.0.2.2:3001")}
+                className="px-2.5 py-1 rounded-lg"
+                style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+              >
+                <Text className="text-white/60 text-[11px]">10.0.2.2:3001 (Android)</Text>
+              </TouchableOpacity>
+            </View>
+
+            {serverStatusMsg ? (
+              <Text className="text-xs mb-3 font-medium" style={{ color: serverStatusMsg.startsWith("✅") ? "#48bb78" : "#fc5b5b" }}>
+                {serverStatusMsg}
+              </Text>
+            ) : null}
+
+            <View className="flex-row gap-2 mt-2">
+              <TouchableOpacity
+                onPress={testServerConnection}
+                disabled={serverTesting}
+                className="flex-1 py-3 rounded-xl items-center justify-center"
+                style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+              >
+                {serverTesting ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <Text className="text-white text-xs font-semibold">Kiểm tra kết nối</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={saveServerUrl}
+                className="flex-1 py-3 rounded-xl items-center justify-center bg-signal"
+              >
+                <Text className="text-white text-xs font-semibold">Lưu địa chỉ</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
