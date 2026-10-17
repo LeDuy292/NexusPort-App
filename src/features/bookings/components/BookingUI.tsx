@@ -32,7 +32,7 @@ export function BookingStatus({ status }: { status: string }) {
 }
 
 export function BookingCard({ booking, style }: { booking: DriverBooking; style?: ViewStyle }) {
-  return <TouchableOpacity style={[ui.card, style]} onPress={() => router.push({ pathname: "/(driver)/booking-detail", params: { id: booking.id } })}>
+  return <TouchableOpacity style={[ui.card, style]} onPress={() => router.push({ pathname: "/(driver)/booking-detail" as any, params: { id: booking.id } })}>
     <View style={ui.row}>
       <Text style={ui.title}>{booking.bookingCode}</Text>
       <BookingStatus status={booking.status} />
@@ -66,7 +66,7 @@ export function BookingNotificationBanner() {
       <TouchableOpacity style={{ flex: 1, gap: 5 }} onPress={() => {
         void markRead(banner.id).catch(() => {});
         dismissBanner();
-        router.push({ pathname: "/(driver)/booking-detail", params: { id: banner.bookingId } });
+        router.push({ pathname: "/(driver)/booking-detail" as any, params: { id: banner.bookingId } });
       }}>
         <Text style={ui.title}>{banner.title}</Text>
         <Text style={ui.text}>{banner.bookingCode} · Chạm để xem chi tiết</Text>

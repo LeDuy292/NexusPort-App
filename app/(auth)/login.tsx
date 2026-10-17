@@ -10,7 +10,8 @@ import {
   Pressable,
   Modal,
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../../src/features/auth/AuthProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -26,6 +27,7 @@ const ROLES = [
     iconColor: "#ff682c",
     iconBg: "rgba(255,104,44,0.15)",
     roleName: "Driver",
+    defaultUsername: "driver01",
   },
   {
     id: "gate",
@@ -35,6 +37,7 @@ const ROLES = [
     iconColor: "#48bb78",
     iconBg: "rgba(72,187,120,0.12)",
     roleName: "Gate Officer",
+    defaultUsername: "gate01",
   },
   {
     id: "yard",
@@ -44,6 +47,7 @@ const ROLES = [
     iconColor: "#f6ad55",
     iconBg: "rgba(246,173,85,0.12)",
     roleName: "Yard Operator",
+    defaultUsername: "yard01",
   },
   {
     id: "berth",
@@ -53,8 +57,10 @@ const ROLES = [
     iconColor: "#63b3ed",
     iconBg: "rgba(99,179,237,0.12)",
     roleName: "Berth Staff",
+    defaultUsername: "berth01",
   },
 ];
+
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
@@ -136,6 +142,22 @@ export default function LoginScreen() {
       await signIn(username, password, selectedRole.roleName);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Đăng nhập nhanh chế độ Demo
+   */
+  const handleDemoLogin = async () => {
+    if (loading || !selectedRole) return;
+    setLoading(true);
+    setError("");
+    try {
+      await signIn(username.trim() || selectedRole.defaultUsername || "driver01", password.trim() || "NexusPort@2026", selectedRole.roleName);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi đăng nhập.");
     } finally {
       setLoading(false);
     }

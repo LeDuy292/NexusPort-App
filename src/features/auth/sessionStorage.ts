@@ -14,6 +14,7 @@ export function isAuthUser(value: unknown): value is AuthUser {
 
 export async function clearSession() {
   await AsyncStorage.removeItem(SESSION_KEY);
+  await AsyncStorage.removeItem("token");
 }
 
 export async function readSession(): Promise<AuthSession | null> {
@@ -31,4 +32,6 @@ export async function readSession(): Promise<AuthSession | null> {
 
 export async function saveSession(session: AuthSession) {
   await AsyncStorage.setItem(SESSION_KEY, JSON.stringify({ ...session.user, token: session.token }));
+  await AsyncStorage.setItem("token", session.token);
 }
+

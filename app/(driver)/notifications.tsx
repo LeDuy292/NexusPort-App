@@ -14,7 +14,7 @@ export default function DriverNotifications() {
     setReadError(null);
     try { if (!item.isRead) await markRead(item.id); }
     catch { setReadError("Chưa đánh dấu đã đọc được. Bạn vẫn có thể xem booking."); }
-    router.push({ pathname: "/(driver)/booking-detail", params: { id: item.bookingId } });
+    router.push({ pathname: "/(driver)/booking-detail" as any, params: { id: item.bookingId } });
   };
   return <View style={ui.page}>
     <BookingHeader title={`Thông báo${feed?.unreadCount ? ` · ${feed.unreadCount} mới` : ""}`} />
