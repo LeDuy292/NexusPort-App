@@ -1,7 +1,12 @@
 import { Stack } from "expo-router";
+import { BookingProvider } from "../../src/features/bookings/BookingProvider";
+import { BookingNotificationBanner } from "../../src/features/bookings/components/BookingUI";
+import { View } from "react-native";
 
 export default function DriverLayout() {
   return (
+    <BookingProvider>
+    <View style={{ flex: 1 }}>
     <Stack
       screenOptions={{
         headerShown: false,
@@ -9,5 +14,8 @@ export default function DriverLayout() {
         animation: "slide_from_right",
       }}
     />
+    <BookingNotificationBanner />
+    </View>
+    </BookingProvider>
   );
 }

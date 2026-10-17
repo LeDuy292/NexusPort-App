@@ -28,7 +28,7 @@ import {
   TripDetail,
   TripStatus,
   DeliveryData,
-} from "../../services/tripService";
+} from "../../src/features/driver/services/tripService";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -94,7 +94,7 @@ function formatDateTime(iso?: string) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function TripDetail() {
+export default function TripDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [trip, setTrip] = useState<TripDetail | null>(null);
   const [loading, setLoading] = useState(true);

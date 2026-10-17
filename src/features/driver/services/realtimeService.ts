@@ -1,21 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { io, Socket } from "socket.io-client";
-
-const DEFAULT_BASE = "http://localhost:3001";
-
-async function getBase(): Promise<string> {
-  const base = await AsyncStorage.getItem("api_base_url");
-  return (base || DEFAULT_BASE).replace(/\/api\/?$/, "").replace(/\/$/, "");
-}
-
-async function getToken(): Promise<string | null> {
-  try {
-    const userRaw = await AsyncStorage.getItem("user");
-    return userRaw ? JSON.parse(userRaw).token : null;
-  } catch {
-    return null;
-  }
-}
+import { getApiBaseUrl } from "../../../config/api";
+import { readSession } from "../../auth/sessionStorage";
 
 export interface RealtimeHandlers {
   onTripAssigned?: (data: any) => void;
@@ -29,10 +14,10 @@ export interface RealtimeHandlers {
  * Đăng ký lắng nghe sự kiện thời gian thực Socket.IO trên Mobile
  */
 export async function subscribeDriverRealtime(handlers: RealtimeHandlers): Promise<() => void> {
-  const token = await getToken();
+  const token = (await readSession())?.token;
   if (!token) return () => {};
 
-  const baseUrl = await getBase();
+  const baseUrl = await getApiBaseUrl();
   let socket: Socket | null = null;
 
   try {

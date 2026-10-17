@@ -10,9 +10,8 @@ import {
   Pressable,
   Modal,
 } from "react-native";
-import { useState, useEffect } from "react";
-import { router } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState } from "react";
+import { useAuth } from "../../src/features/auth/AuthProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -27,8 +26,6 @@ const ROLES = [
     iconColor: "#ff682c",
     iconBg: "rgba(255,104,44,0.15)",
     roleName: "Driver",
-    defaultUsername: "driver01",
-    redirect: "/(driver)",
   },
   {
     id: "gate",
@@ -38,8 +35,6 @@ const ROLES = [
     iconColor: "#48bb78",
     iconBg: "rgba(72,187,120,0.12)",
     roleName: "Gate Officer",
-    defaultUsername: "gate01",
-    redirect: "/(gate)",
   },
   {
     id: "yard",
@@ -49,8 +44,6 @@ const ROLES = [
     iconColor: "#f6ad55",
     iconBg: "rgba(246,173,85,0.12)",
     roleName: "Yard Operator",
-    defaultUsername: "yard01",
-    redirect: "/(yard)",
   },
   {
     id: "berth",
@@ -60,12 +53,11 @@ const ROLES = [
     iconColor: "#63b3ed",
     iconBg: "rgba(99,179,237,0.12)",
     roleName: "Berth Staff",
-    defaultUsername: "berth01",
-    redirect: "/(yard)",
   },
 ];
 
 export default function LoginScreen() {
+  const { signIn } = useAuth();
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedRole, setSelectedRole] = useState<(typeof ROLES)[0] | null>(null);
   const [username, setUsername] = useState("");
@@ -132,6 +124,7 @@ export default function LoginScreen() {
    * Đăng nhập thật kết nối trực tiếp đến Backend API PostgreSQL
    */
   const handleLogin = async () => {
+    if (loading || !selectedRole) return;
     if (!username.trim() || !password.trim()) {
       setError("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.");
       return;
@@ -140,89 +133,11 @@ export default function LoginScreen() {
     setError("");
 
     try {
-      const baseUrl = await getBase();
-
-      const response = await fetch(`${baseUrl}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify({
-          username: username.trim(),
-          password: password.trim(),
-        }),
-      });
-
-      const result = await response.json().catch(() => null);
-
-      if (!response.ok || !result?.success) {
-        setLoading(false);
-        const errMsg = result?.message || (response.status === 401 ? "Sai tên đăng nhập hoặc mật khẩu." : `Đăng nhập thất bại (HTTP ${response.status})`);
-        setError(errMsg);
-        return;
-      }
-
-      const { token, user: backendUser } = result.data;
-
-      // Xác định màn hình điều hướng theo vai trò từ Backend
-      const roleLower = (backendUser.role || "").trim().toLowerCase();
-      let targetRedirect = selectedRole?.redirect || "/(driver)";
-      if (roleLower === "gate officer" || roleLower === "gate") {
-        targetRedirect = "/(gate)";
-      } else if (roleLower === "yard operator" || roleLower === "yard staff" || roleLower === "berth staff") {
-        targetRedirect = "/(yard)";
-      } else if (roleLower === "driver") {
-        targetRedirect = "/(driver)";
-      }
-
-      // Lưu đầy đủ user profile và token JWT vào AsyncStorage
-      const authUser = {
-        id: backendUser.id,
-        username: backendUser.username,
-        email: backendUser.email,
-        fullName: backendUser.fullName || backendUser.full_name || backendUser.username,
-        role: backendUser.role,
-        token: token,
-        redirect: targetRedirect,
-      };
-
-      await AsyncStorage.setItem("user", JSON.stringify(authUser));
-      await AsyncStorage.setItem("token", token);
-
-      setLoading(false);
-      router.replace(targetRedirect as any);
-    } catch (err: any) {
-      setLoading(false);
-      console.error("Login API error:", err);
-      setError(`Không thể kết nối đến máy chủ (${apiBaseUrl}). Vui lòng kiểm tra server backend đang chạy.`);
-    }
-  };
-
-  /**
-   * Đăng nhập chế độ Demo / Ngoại tuyến (khi không bật server)
-   */
-  const handleDemoLogin = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const authUser = {
-        id: "demo-driver-id",
-        username: username.trim() || selectedRole?.defaultUsername || "driver01",
-        email: `${username.trim() || "driver01"}@nexusport.vn`,
-        fullName: selectedRole?.title || "Tài xế Demo",
-        role: selectedRole?.roleName || "Driver",
-        token: "demo_jwt_offline_token",
-        redirect: selectedRole?.redirect || "/(driver)",
-      };
-
-      await AsyncStorage.setItem("user", JSON.stringify(authUser));
-      await AsyncStorage.setItem("token", authUser.token);
-      setLoading(false);
-      router.replace(selectedRole!.redirect as any);
+      await signIn(username, password, selectedRole.roleName);
     } catch (err) {
+      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.");
+    } finally {
       setLoading(false);
-      setError("Đã xảy ra lỗi khi vào chế độ demo.");
     }
   };
 

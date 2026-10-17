@@ -16,7 +16,7 @@ import {
   getYardNavigation,
   arriveAtYard,
   YardNavigationData,
-} from "../../services/tripService";
+} from "../../src/features/driver/services/tripService";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
   Assigned: { label: "Được phân công", color: "#63b3ed", icon: "clipboard-check-outline" },
