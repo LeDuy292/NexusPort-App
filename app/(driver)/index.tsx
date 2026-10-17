@@ -1,4 +1,5 @@
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Alert } from "react-native";
+import { useRef, useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Modal } from "react-native";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../src/features/auth/AuthProvider";
@@ -17,6 +18,10 @@ const ACTIONS = [
 export default function DriverHome() {
   const { user, signOut } = useAuth();
   const { feed, loading, reload } = useBookings();
+  const [showSignOut, setShowSignOut] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
+  const signOutPending = useRef(false);
   const bookings = feed?.bookings || [];
   const approved = bookings.filter((booking) => isApproved(booking.status));
   const nextAppointment = approved.filter((booking) => Date.parse(booking.appointmentEnd) >= Date.now())
@@ -28,21 +33,28 @@ export default function DriverHome() {
   ];
 
   const confirmSignOut = () => {
-    Alert.alert(
-      "Đăng xuất tài khoản",
-      `Bạn có chắc chắn muốn đăng xuất khỏi tài khoản tài xế "${feed?.profile?.fullName || user?.fullName || user?.username || "Tài xế"}" không?`,
-      [
-        { text: "Hủy", style: "cancel" },
-        {
-          text: "Đăng xuất",
-          style: "destructive",
-          onPress: async () => {
-            await signOut();
-            router.replace("/(auth)/login");
-          },
-        },
-      ]
-    );
+    setSignOutError(null);
+    setShowSignOut(true);
+  };
+
+  const dismissSignOut = () => {
+    if (!signOutPending.current) setShowSignOut(false);
+  };
+
+  const handleSignOut = async () => {
+    if (signOutPending.current) return;
+    signOutPending.current = true;
+    setSigningOut(true);
+    setSignOutError(null);
+    try {
+      // AuthProvider clears saved credentials; the protected stack returns to login.
+      await signOut();
+    } catch {
+      setSignOutError("Không thể xóa phiên đăng nhập. Vui lòng thử đăng xuất lại.");
+    } finally {
+      signOutPending.current = false;
+      setSigningOut(false);
+    }
   };
 
   return <View style={ui.page}>
@@ -131,6 +143,25 @@ export default function DriverHome() {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    <Modal visible={showSignOut} transparent animationType="fade" onRequestClose={dismissSignOut}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <View accessibilityViewIsModal style={{ width: "100%", maxWidth: 420, backgroundColor: "#1c1c1e", borderRadius: 18, padding: 24, gap: 18 }}>
+          <Text accessibilityRole="header" style={ui.title}>Đăng xuất tài khoản</Text>
+          <Text style={{ color: "#ddd", lineHeight: 22 }}>
+            Bạn có chắc chắn muốn đăng xuất khỏi tài khoản tài xế "{feed?.profile?.fullName || user?.fullName || user?.username || "Tài xế"}" không?
+          </Text>
+          {signOutError && <Text accessibilityRole="alert" style={{ color: "#fc5b5b" }}>{signOutError}</Text>}
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <TouchableOpacity accessibilityRole="button" disabled={signingOut} onPress={dismissSignOut} style={{ flex: 1, padding: 14, borderRadius: 10, alignItems: "center", backgroundColor: "#333", opacity: signingOut ? 0.5 : 1 }}>
+              <Text style={{ color: "white", fontWeight: "600" }}>Hủy</Text>
+            </TouchableOpacity>
+            <TouchableOpacity accessibilityRole="button" accessibilityState={{ busy: signingOut, disabled: signingOut }} disabled={signingOut} onPress={() => void handleSignOut()} style={{ flex: 1, padding: 14, borderRadius: 10, alignItems: "center", backgroundColor: "#c73535", opacity: signingOut ? 0.6 : 1 }}>
+              <Text style={{ color: "white", fontWeight: "600" }}>{signingOut ? "Đang đăng xuất…" : "Đăng xuất"}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
   </View>;
 }
 
