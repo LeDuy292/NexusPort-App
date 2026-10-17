@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { AppState } from "react-native";
 import { getBookingFeed, markBookingNotificationRead } from "./bookingService";
 import type { BookingFeed, BookingNotification } from "./types";
+import { subscribeDriverRealtime } from "../driver/services/realtimeService";
 
 interface BookingContextValue {
   feed: BookingFeed | null;
@@ -11,6 +12,7 @@ interface BookingContextValue {
   markRead: (id: string) => Promise<void>;
   banner: BookingNotification | null;
   dismissBanner: () => void;
+  realtimeConnected: boolean;
 }
 
 const BookingContext = createContext<BookingContextValue | null>(null);
@@ -20,12 +22,14 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [banner, setBanner] = useState<BookingNotification | null>(null);
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
   const seen = useRef<Set<string> | null>(null);
   const busy = useRef(false);
+  const requested = useRef(false);
   const mounted = useRef(true);
 
   const reload = useCallback(async () => {
-    if (busy.current) return;
+    if (busy.current) { requested.current = true; return; }
     busy.current = true;
     try {
       const next = await getBookingFeed();
@@ -40,6 +44,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     } finally {
       busy.current = false;
       if (mounted.current) setLoading(false);
+      if (requested.current && mounted.current) { requested.current = false; void reload(); }
     }
   }, []);
 
@@ -48,9 +53,18 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     void reload();
     const timer = setInterval(() => {
       if (AppState.currentState !== "background") void reload();
-    }, 8000);
+    }, 15000);
+    let disposed = false;
+    let unsubscribe: (() => void) | undefined;
+    void subscribeDriverRealtime({
+      onConnected: () => { if (!disposed) { setRealtimeConnected(true); void reload(); } },
+      onDisconnected: () => { if (!disposed) setRealtimeConnected(false); },
+      onConnectionError: () => { if (!disposed) setRealtimeConnected(false); },
+      onBookingDispatchUpdated: () => { if (!disposed) void reload(); },
+    }).then(cleanup => { if (disposed) cleanup(); else unsubscribe = cleanup; })
+      .catch(() => { if (!disposed) setRealtimeConnected(false); });
     const subscription = AppState.addEventListener("change", (state) => { if (state === "active") void reload(); });
-    return () => { mounted.current = false; clearInterval(timer); subscription.remove(); };
+    return () => { disposed = true; mounted.current = false; unsubscribe?.(); clearInterval(timer); subscription.remove(); };
   }, [reload]);
 
   useEffect(() => {
@@ -68,7 +82,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  return <BookingContext.Provider value={{ feed, loading, error, reload, markRead, banner, dismissBanner: () => setBanner(null) }}>{children}</BookingContext.Provider>;
+  return <BookingContext.Provider value={{ feed, loading, error, reload, markRead, banner, realtimeConnected, dismissBanner: () => setBanner(null) }}>{children}</BookingContext.Provider>;
 }
 
 export function useBookings() {

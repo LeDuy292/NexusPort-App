@@ -40,6 +40,9 @@ export function BookingCard({ booking, style }: { booking: DriverBooking; style?
     <Text style={ui.text}>{bookingTypeLabel(booking.bookingType)} · {booking.truckPlate || "Chưa gán xe"}</Text>
     <Text style={ui.muted}>{booking.containers.map((item) => item.containerNo).join(", ") || "Chưa có container"}</Text>
     <Text style={{ color: "#63b3ed", fontSize: 13 }}>{bookingTime(booking.appointmentStart)}</Text>
+    {booking.dispatch && booking.dispatch.status !== "withdrawn" && <Text style={{ color: booking.dispatch.status === "called" ? "#ffab75" : "#79d69a", fontSize: 13 }}>
+      {{ arrived: "Đã đến · chưa sẵn sàng", ready: booking.coordination?.isHeld ? "Điều độ yêu cầu chờ thêm" : "Sẵn sàng · chờ điều độ", called: "Điều độ đang gọi · chạm để phản hồi", acknowledged: "Đã nhận lệnh gọi" }[booking.dispatch.status]}
+    </Text>}
     <Text style={ui.muted}>{booking.status === "pending" ? "Khung giờ đề xuất · Đang chờ điều độ duyệt" : booking.carrierName}</Text>
   </TouchableOpacity>;
 }
