@@ -7,6 +7,7 @@ import { BookingCard, BookingFeedState, ui } from "../../src/features/bookings/c
 import { isApproved } from "../../src/features/bookings/bookingPresentation";
 
 const ACTIONS = [
+  { label: "Smart Route", subtitle: "Từ Gate In đến điểm giao nhận & cổng ra", icon: "map-marker-path", route: "/(driver)/yard-navigation", color: "#ff922e" },
   { label: "Booking được giao", subtitle: "Xe, hàng hóa & trạng thái duyệt", icon: "clipboard-list-outline", route: "/(driver)/bookings", color: "#ff682c" },
   { label: "Lịch hẹn", subtitle: "Khung giờ booking đã duyệt", icon: "calendar-clock", route: "/(driver)/appointments", color: "#63b3ed" },
   { label: "Chuyến vận chuyển", subtitle: "Các bước thực hiện chuyến", icon: "truck-fast", route: "/(driver)/trips", color: "#9f7aea" },

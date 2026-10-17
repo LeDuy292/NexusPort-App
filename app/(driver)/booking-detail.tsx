@@ -65,6 +65,10 @@ export default function BookingDetailScreen() {
           <Text style={ui.text}>Tình trạng: {container.loadStatus === "empty" ? "Rỗng" : container.loadStatus === "laden" || container.loadStatus === "full" ? "Có hàng" : container.loadStatus || "Chưa khai báo"}</Text>
           <Text style={ui.muted}>Số chì: {container.sealNumber || "Chưa có"}</Text>
           {container.customerName && <Text style={ui.muted}>Khách hàng: {container.customerName}</Text>}
+          <TouchableOpacity accessibilityRole="button" onPress={() => router.push({ pathname: "/(driver)/yard-navigation", params: { bookingId: booking.id, containerId: container.id } } as any)} style={{ marginTop: 4, padding: 13, borderRadius: 12, borderWidth: 1, borderColor: "#ff922e70", backgroundColor: "#ff922e15" }}>
+            <Text style={{ color: "#ffad58", fontWeight: "700" }}>Smart Route · Điểm giao nhận & cổng ra →</Text>
+            <Text style={[ui.muted, { marginTop: 4 }]}>Tự cập nhật khi cổng xác nhận Gate In và Yard hoàn tất xử lý.</Text>
+          </TouchableOpacity>
         </View>)}
         {booking.description && <View style={ui.card}><Text style={ui.title}>Ghi chú</Text><Text style={ui.text}>{booking.description}</Text></View>}
       </>}
