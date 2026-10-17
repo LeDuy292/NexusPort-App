@@ -7,6 +7,8 @@
 3. Mặc định API ở `http://localhost:3001`. Để đổi, copy `.env.example` thành `.env.local`, sửa `EXPO_PUBLIC_API_URL` rồi khởi động lại Expo. Khi chạy trên điện thoại thật, dùng IP LAN của máy chạy backend.
 4. Nếu trước đây đã đặt AsyncStorage key `api_base_url`, giá trị đó được ưu tiên hơn biến môi trường. Xóa key này khi muốn dùng cấu hình `.env.local`.
 
+Các lệnh khởi động dùng `scripts/expo.cjs` để bỏ HTTP metadata cache của Expo SDK 54, tránh lỗi `Body is unusable: Body has already been read` khi cache không ghi/đọc được. Metro vẫn giữ cache và app vẫn gọi backend bình thường. Không cần sửa `node_modules` hoặc cài lại thư viện. Nếu không kết nối được dịch vụ Expo, dùng `npm run web:offline`; chế độ này chỉ bỏ các request của công cụ Expo, không tắt request backend trong app.
+
 ## Cấu trúc
 
 ```text
