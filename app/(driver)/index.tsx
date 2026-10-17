@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Pressable,
 } from "react-native";
+import { useState, useEffect } from "react";
 import { router } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -79,8 +80,21 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function DriverHome() {
+  const [driverUser, setDriverUser] = useState<any>(null);
+
+  useEffect(() => {
+    AsyncStorage.getItem("user").then((raw) => {
+      if (raw) {
+        try {
+          setDriverUser(JSON.parse(raw));
+        } catch (e) {}
+      }
+    });
+  }, []);
+
   const handleLogout = async () => {
     await AsyncStorage.removeItem("user");
+    await AsyncStorage.removeItem("token");
     router.replace("/(auth)/login");
   };
 
@@ -111,7 +125,9 @@ export default function DriverHome() {
 
         <View>
           <Text className="text-white/50 text-sm">Xin chào,</Text>
-          <Text className="text-white text-2xl font-bold mt-0.5">Nguyễn Văn A 👋</Text>
+          <Text className="text-white text-2xl font-bold mt-0.5">
+            {driverUser?.fullName || driverUser?.username || "Tài xế"} 👋
+          </Text>
           <View
             className="flex-row items-center gap-1.5 mt-2 self-start px-3 py-1.5 rounded-full"
             style={{ backgroundColor: "rgba(72,187,120,0.12)", borderWidth: 1, borderColor: "rgba(72,187,120,0.2)" }}

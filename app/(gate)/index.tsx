@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Pressable,
 } from "react-native";
+import { useState, useEffect } from "react";
 import { router } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -79,8 +80,21 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function GateHome() {
+  const [gateUser, setGateUser] = useState<any>(null);
+
+  useEffect(() => {
+    AsyncStorage.getItem("user").then((raw) => {
+      if (raw) {
+        try {
+          setGateUser(JSON.parse(raw));
+        } catch (e) {}
+      }
+    });
+  }, []);
+
   const handleLogout = async () => {
     await AsyncStorage.removeItem("user");
+    await AsyncStorage.removeItem("token");
     router.replace("/(auth)/login");
   };
 
@@ -110,7 +124,9 @@ export default function GateHome() {
 
         <View>
           <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>Xin chào,</Text>
-          <Text style={{ color: "white", fontSize: 24, fontWeight: "bold", marginTop: 2 }}>Gate Officer 👮</Text>
+          <Text style={{ color: "white", fontSize: 24, fontWeight: "bold", marginTop: 2 }}>
+            {gateUser?.fullName || gateUser?.username || "Gate Officer"} 👮
+          </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8, alignSelf: "flex-start", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: "rgba(72,187,120,0.12)", borderWidth: 1, borderColor: "rgba(72,187,120,0.2)" }}>
             <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#48bb78" }} />
             <Text style={{ color: "#48bb78", fontSize: 12, fontWeight: "600" }}>Ca làm việc: 08:00 - 16:00</Text>
