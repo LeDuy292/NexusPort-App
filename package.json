@@ -37,7 +37,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test:auth": "node --test tests/auth.test.cjs",
-    "test:bookings": "node --test tests/bookings.test.cjs"
+    "test:bookings": "node --test tests/bookings.test.cjs",
+    "test:smart-route": "node --test tests/smart-route.test.cjs"
   },
   "private": true
 }

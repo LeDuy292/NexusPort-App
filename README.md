@@ -55,10 +55,22 @@ App gọi `/api/driver-bookings/feed` mỗi 8 giây khi đang mở. Thông báo 
 
 Đăng nhập, danh tính, booking được giao, chi tiết hàng/xe, thông báo, lịch hẹn, API chuyến xe và điều hướng Yard đã nối backend. Các màn hình QR check-in, tra cứu container và nghiệp vụ Gate/Yard còn dữ liệu mẫu; cần tích hợp API riêng trước khi sử dụng nghiệp vụ thật.
 
+## Smart Route (NXP-114)
+
+Chạy Node Core tại `http://localhost:4000` cùng database PostgreSQL và các migration Smart Route; cấu hình `EXPO_PUBLIC_NODE_CORE_URL` trong `.env.local` (điện thoại thật dùng IP LAN). AsyncStorage `node_core_base_url` được ưu tiên nếu có. Các request dùng JWT phiên đăng nhập hiện tại; Node Core xác định hồ sơ Driver qua `drivers.user_id`.
+
+Mở **Smart Route** từ trang chủ hoặc **Booking → container → Smart Route**. Tuyến luôn được giới hạn theo booking và container; sau khi Gate xác nhận xe qua cổng, app lấy Operation Order và Yard Location qua `/api/v1/drivers/me/routes`. Sơ đồ hiển thị đường nội bộ, các Block/Slot, sức chứa ô, tuyến khả dụng và khu vực hạn chế/ùn tắc. Đây là bản đồ bãi theo mốc xác nhận, không phải định vị GPS.
+
+Driver xác nhận **đã đến điểm giao nhận** qua endpoint `progress`, chờ Yard hoàn tất Operation Order, rồi xác nhận tình trạng container qua `confirm-container` (`OK`, `DAMAGED`, `ISSUE`, ghi chú tối đa 1.000 ký tự). App chuyển sang tuyến đến cổng ra khi backend xác nhận toàn bộ booking đủ điều kiện. Gate In / Gate Out do nhân viên cổng xác nhận; Driver không tự thay đổi hai trạng thái này. Điều độ theo dõi cùng trạng thái từ backend.
+
+Màn hình tải lại mỗi 15 giây, khi app hoạt động trở lại và khi nhận sự kiện Yard/Dispatcher từ Node Core. Khi điểm đến, điều kiện đường hoặc phiên bản bản đồ thay đổi, app hiển thị tuyến mới; nếu không có tuyến khả dụng sẽ hiện thông báo từ backend. Lỗi kết nối tắt thao tác xác nhận và ẩn tuyến cũ cho đến khi tải lại thành công. Dữ liệu bản đồ thiếu hoặc hết hạn không được thay bằng tuyến GPS giả định.
+
 ## Kiểm tra
 
 ```sh
 npm run test:auth
+npm run test:bookings
+npm run test:smart-route
 npx tsc --noEmit
 npx expo export --platform web
 ```

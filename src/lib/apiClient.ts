@@ -18,12 +18,13 @@ export function onSessionExpired(listener: () => void) {
 interface RequestOptions extends RequestInit {
   authenticated?: boolean;
   token?: string;
+  baseUrl?: string;
 }
 
 export async function apiRequest<T = any>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { authenticated = true, token: explicitToken, ...request } = options;
+  const { authenticated = true, token: explicitToken, baseUrl, ...request } = options;
   const [base, session] = await Promise.all([
-    getApiBaseUrl(),
+    baseUrl ? Promise.resolve(baseUrl.replace(/\/+$/, "")) : getApiBaseUrl(),
     authenticated && !explicitToken ? readSession() : Promise.resolve(null),
   ]);
   const token = explicitToken || session?.token;

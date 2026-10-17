@@ -16,14 +16,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useState } from "react";
 import {
   getTransportOrderDetail,
-  getTripById,
   acknowledgeTrip,
   pickupVehicle,
   pickupContainer,
-  gateIn,
-  arriveAtYard,
-  deliverContainer,
-  gateOut,
   returnVehicle,
   TripDetail,
   TripStatus,
@@ -77,10 +72,6 @@ const ACTION_STEPS: ActionStep[] = [
   { requiredStatus: "Assigned", label: "Xác nhận nhận chuyến", icon: "hand-okay", color: "#63b3ed" },
   { requiredStatus: "Acknowledged", label: "Xác nhận đã lấy xe", icon: "truck-outline", color: "#9f7aea" },
   { requiredStatus: "Vehicle Picked Up", label: "Xác nhận đã lấy container", icon: "package-variant", color: "#f6ad55" },
-  { requiredStatus: "Container Picked Up", label: "Thực hiện Gate In", icon: "boom-gate-up-outline", color: "#ff682c" },
-  { requiredStatus: "In Transit", label: "Xác nhận đã đến Bãi", icon: "map-marker-check", color: "#ff682c" },
-  { requiredStatus: "Arrived at Yard", label: "Xác nhận giao container", icon: "package-variant-closed-check", color: "#48bb78", needsDeliveryForm: true },
-  { requiredStatus: "Container Delivered", label: "Thực hiện Gate Out", icon: "boom-gate-outline", color: "#48bb78" },
   { requiredStatus: "Gate Out Completed", label: "Xác nhận trả xe & Hoàn thành", icon: "truck-check-outline", color: "#48bb78" },
 ];
 
@@ -136,10 +127,6 @@ export default function TripDetailScreen() {
         case "Assigned": updated = await acknowledgeTrip(trip.id); break;
         case "Acknowledged": updated = await pickupVehicle(trip.id); break;
         case "Vehicle Picked Up": updated = await pickupContainer(trip.id); break;
-        case "Container Picked Up": updated = await gateIn(trip.id); break;
-        case "In Transit": updated = await arriveAtYard(trip.id); break;
-        case "Arrived at Yard": updated = await deliverContainer(trip.id, extra || {}); break;
-        case "Container Delivered": updated = await gateOut(trip.id); break;
         case "Gate Out Completed": updated = await returnVehicle(trip.id); break;
         default: return;
       }
@@ -177,6 +164,7 @@ export default function TripDetailScreen() {
 
   // Xác định action step hiện tại
   const currentAction = ACTION_STEPS.find((s) => s.requiredStatus === trip.status);
+  const waitingForGate = ["Container Picked Up", "Container Delivered", "Gate In", "In Transit", "Arrived at Yard"].includes(trip.status);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#080808" }}>
@@ -185,6 +173,10 @@ export default function TripDetailScreen() {
         colors={[`${cfg.color}20`, "transparent"]}
         style={{ paddingTop: 56, paddingBottom: 16, paddingHorizontal: 20 }}
       >
+        {waitingForGate && <View style={[cardStyle, { borderColor: "#f6ad5560" }]}>
+          <Text style={{ color: "#f6ad55", fontWeight: "700" }}>Theo dõi giao nhận và qua cổng trên Smart Route</Text>
+          <Text style={{ color: "#c8c8c8", fontSize: 13, lineHeight: 20, marginTop: 6 }}>Mở Smart Route trong booking để xác nhận đã đến và nhận đúng container. Nhân viên cổng xác nhận Gate In / Gate Out khi xe đi qua.</Text>
+        </View>}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 }}>
           <TouchableOpacity
             onPress={() => router.back()}
@@ -246,7 +238,7 @@ export default function TripDetailScreen() {
           )}
 
           <TouchableOpacity
-            onPress={() => router.push({ pathname: "/(driver)/yard-navigation", params: { id: trip.id } } as any)}
+            onPress={() => router.push({ pathname: "/(driver)/yard-navigation", params: trip.bookingId ? { bookingId: trip.bookingId, containerNumber: trip.containerNo } : { id: trip.id } } as any)}
             style={{
               marginTop: 10,
               paddingVertical: 12,

@@ -1,5 +1,5 @@
 import { io, Socket } from "socket.io-client";
-import { getApiBaseUrl } from "../../../config/api";
+import { getApiBaseUrl, getNodeCoreBaseUrl } from "../../../config/api";
 import { readSession } from "../../auth/sessionStorage";
 
 export interface RealtimeHandlers {
@@ -9,6 +9,19 @@ export interface RealtimeHandlers {
   onConnected?: () => void;
   onDisconnected?: () => void;
   onConnectionError?: (err: any) => void;
+}
+
+/** Canonical Node Core changes; screens keep polling if the transport is unavailable. */
+export async function subscribeYardRealtime(onUpdate: () => void): Promise<() => void> {
+  const token = (await readSession())?.token;
+  if (!token) return () => {};
+  const socket = io(await getNodeCoreBaseUrl(), {
+    auth: { token }, transports: ["websocket", "polling"],
+    reconnection: true, reconnectionAttempts: 5,
+  });
+  const events = ["connect", "yard.operation.completed", "dispatcher.status.updated", "gate.transaction.updated", "yard.route.updated"];
+  events.forEach(event => socket.on(event, onUpdate));
+  return () => { events.forEach(event => socket.off(event, onUpdate)); socket.disconnect(); };
 }
 
 /**
