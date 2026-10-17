@@ -10,8 +10,7 @@ import {
   Pressable,
 } from "react-native";
 import { useState } from "react";
-import { router } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "../../src/features/auth/AuthProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -24,7 +23,6 @@ const ROLES = [
     iconColor: "#ff682c",
     iconBg: "rgba(255,104,44,0.15)",
     roleName: "Driver",
-    redirect: "/(driver)",
   },
   {
     id: "gate",
@@ -34,7 +32,6 @@ const ROLES = [
     iconColor: "#48bb78",
     iconBg: "rgba(72,187,120,0.12)",
     roleName: "Gate Officer",
-    redirect: "/(gate)",
   },
   {
     id: "yard",
@@ -44,7 +41,6 @@ const ROLES = [
     iconColor: "#f6ad55",
     iconBg: "rgba(246,173,85,0.12)",
     roleName: "Yard Operator",
-    redirect: "/(yard)",
   },
   {
     id: "berth",
@@ -54,11 +50,11 @@ const ROLES = [
     iconColor: "#63b3ed",
     iconBg: "rgba(99,179,237,0.12)",
     roleName: "Berth Staff",
-    redirect: "/(yard)",
   },
 ];
 
 export default function LoginScreen() {
+  const { signIn } = useAuth();
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedRole, setSelectedRole] = useState<(typeof ROLES)[0] | null>(null);
   const [username, setUsername] = useState("");
@@ -74,6 +70,7 @@ export default function LoginScreen() {
   };
 
   const handleLogin = async () => {
+    if (loading || !selectedRole) return;
     if (!username.trim() || !password.trim()) {
       setError("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.");
       return;
@@ -82,21 +79,11 @@ export default function LoginScreen() {
     setError("");
 
     try {
-      // Simulate API call
-      await new Promise((r) => setTimeout(r, 600));
-
-      const user = {
-        username,
-        role: selectedRole!.roleName,
-        redirect: selectedRole!.redirect,
-      };
-
-      await AsyncStorage.setItem("user", JSON.stringify(user));
-      setLoading(false);
-      router.replace(selectedRole!.redirect as any);
+      await signIn(username, password, selectedRole.roleName);
     } catch (err) {
+      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.");
+    } finally {
       setLoading(false);
-      setError("Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.");
     }
   };
 

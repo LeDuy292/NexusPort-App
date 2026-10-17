@@ -7,12 +7,12 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useState } from "react";
-import { getTransportOrders, getMyTrips, Trip, TripStatus } from "../../services/tripService";
-import { subscribeDriverRealtime } from "../../services/realtimeService";
+import { getTransportOrders, type Trip } from "../../src/features/driver/services/tripService";
+import { subscribeDriverRealtime } from "../../src/features/driver/services/realtimeService";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -57,12 +57,19 @@ function formatDate(iso?: string) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function TripsList() {
+  const { status } = useLocalSearchParams<{ status?: string }>();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("IN_PROGRESS");
+  const [activeFilter, setActiveFilter] = useState(
+    status && FILTER_TABS.some((tab) => tab.key === status) ? status : "IN_PROGRESS"
+  );
   const [total, setTotal] = useState(0);
   const [realtimeOnline, setRealtimeOnline] = useState(false);
+
+  useEffect(() => {
+    if (status && FILTER_TABS.some((tab) => tab.key === status)) setActiveFilter(status);
+  }, [status]);
 
   const load = useCallback(
     async (filter = activeFilter, silent = false) => {
@@ -87,6 +94,7 @@ export default function TripsList() {
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;
+    let disposed = false;
     subscribeDriverRealtime({
       onConnected: () => setRealtimeOnline(true),
       onDisconnected: () => setRealtimeOnline(false),
@@ -98,10 +106,14 @@ export default function TripsList() {
         load(activeFilter, true);
       },
     }).then((fn) => {
-      cleanup = fn;
+      if (disposed) fn();
+      else cleanup = fn;
+    }).catch(() => {
+      if (!disposed) setRealtimeOnline(false);
     });
 
     return () => {
+      disposed = true;
       if (cleanup) cleanup();
     };
   }, [load, activeFilter]);

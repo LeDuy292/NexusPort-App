@@ -1,101 +1,24 @@
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
-import { router } from "expo-router";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-
-const APPOINTMENTS = [
-  {
-    id: "BK-2024-001",
-    container: "MSKU1234567",
-    date: "Hôm nay, 14:00",
-    gate: "Cổng A",
-    type: "Nhập hàng",
-    status: "confirmed",
-    statusLabel: "Đã xác nhận",
-  },
-  {
-    id: "BK-2024-002",
-    container: "CMAU9876543",
-    date: "Hôm nay, 16:30",
-    gate: "Cổng B",
-    type: "Xuất hàng",
-    status: "pending",
-    statusLabel: "Chờ xác nhận",
-  },
-  {
-    id: "BK-2024-003",
-    container: "TGHU5554321",
-    date: "Ngày mai, 08:00",
-    gate: "Cổng A",
-    type: "Nhập hàng",
-    status: "confirmed",
-    statusLabel: "Đã xác nhận",
-  },
-];
-
-const STATUS_COLORS: Record<string, string> = {
-  confirmed: "#48bb78",
-  pending: "#f6ad55",
-  cancelled: "#fc5b5b",
-};
+import { RefreshControl, ScrollView, Text, View } from "react-native";
+import { useBookings } from "../../src/features/bookings/BookingProvider";
+import { isApproved } from "../../src/features/bookings/bookingPresentation";
+import { BookingCard, BookingFeedState, BookingHeader, ui } from "../../src/features/bookings/components/BookingUI";
 
 export default function DriverAppointments() {
-  return (
-    <View style={{ flex: 1, backgroundColor: "#080808" }}>
-      <LinearGradient
-        colors={["rgba(99,179,237,0.12)", "transparent"]}
-        style={{ paddingTop: 56, paddingBottom: 20, paddingHorizontal: 20 }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{ width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.07)" }}
-            >
-              <Ionicons name="arrow-back" size={18} color="white" />
-            </TouchableOpacity>
-            <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>Lịch hẹn của tôi</Text>
-          </View>
-          <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: "rgba(99,179,237,0.15)", borderWidth: 1, borderColor: "rgba(99,179,237,0.3)" }}>
-            <Text style={{ color: "#63b3ed", fontSize: 12, fontWeight: "600" }}>{APPOINTMENTS.length} lịch hẹn</Text>
-          </View>
-        </View>
-      </LinearGradient>
-
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, gap: 12 }} showsVerticalScrollIndicator={false}>
-        {APPOINTMENTS.map(appt => (
-          <TouchableOpacity
-            key={appt.id}
-            style={{ borderRadius: 16, padding: 16, backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: "rgba(255,255,255,0.07)" }}
-          >
-            {/* Top row */}
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-              <View style={{ width: 42, height: 42, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(99,179,237,0.12)", marginRight: 12 }}>
-                <MaterialCommunityIcons name="clipboard-list-outline" size={22} color="#63b3ed" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: "white", fontWeight: "700", fontSize: 15 }}>{appt.container}</Text>
-                <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 2 }}>{appt.id} · {appt.type}</Text>
-              </View>
-              <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: STATUS_COLORS[appt.status] + "20" }}>
-                <Text style={{ fontSize: 11, fontWeight: "600", color: STATUS_COLORS[appt.status] }}>{appt.statusLabel}</Text>
-              </View>
-            </View>
-
-            {/* Info */}
-            <View style={{ flexDirection: "row", gap: 16, paddingTop: 10, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.05)" }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                <Ionicons name="time-outline" size={13} color="rgba(255,255,255,0.3)" />
-                <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>{appt.date}</Text>
-              </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.3)" />
-                <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>{appt.gate}</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
-  );
+  const { feed, loading, error, reload } = useBookings();
+  const appointments = (feed?.bookings || []).filter((booking) => isApproved(booking.status))
+    .sort((left, right) => Date.parse(left.appointmentStart) - Date.parse(right.appointmentStart));
+  const upcoming = appointments.filter((booking) => Date.parse(booking.appointmentEnd) >= Date.now());
+  const past = appointments.filter((booking) => Date.parse(booking.appointmentEnd) < Date.now());
+  return <View style={ui.page}>
+    <BookingHeader title="Lịch hẹn đã duyệt" />
+    <ScrollView contentContainerStyle={ui.content} refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void reload()} tintColor="#ff682c" />}>
+      <BookingFeedState />
+      <Text style={ui.muted}>Chỉ hiển thị booking đã được duyệt. Chạm vào lịch để xem xe, hàng hóa và khung giờ.</Text>
+      {upcoming.length > 0 && <Text style={ui.title}>Sắp tới · {upcoming.length}</Text>}
+      {upcoming.map((booking) => <BookingCard key={booking.id} booking={booking} style={{ borderColor: "#48bb7850" }} />)}
+      {past.length > 0 && <Text style={ui.title}>Đã qua khung giờ</Text>}
+      {past.map((booking) => <BookingCard key={booking.id} booking={booking} />)}
+      {!loading && !error && feed?.profile && !appointments.length && <Text style={ui.muted}>Chưa có lịch hẹn đã duyệt. Booking đang chờ duyệt nằm trong mục Booking được giao.</Text>}
+    </ScrollView>
+  </View>;
 }
