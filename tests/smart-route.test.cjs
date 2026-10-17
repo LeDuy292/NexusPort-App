@@ -45,3 +45,10 @@ test("no route errors are surfaced without retrying or falling back to a differe
   assert.equal(harness.requests.length, 1);
   assert.equal(harness.values.has("user"), true);
 });
+
+test("Smart Route shows Node Core's nested error message instead of a generic HTTP error", async () => {
+  const harness = createHarness(async () => new Response(JSON.stringify({ success: false, error: { code: "FORBIDDEN", message: "Tài khoản chưa được liên kết với tài xế đang hoạt động." } }), { status: 403 }));
+  harness.values.set("user", JSON.stringify(user));
+  await assert.rejects(harness.load("src/features/driver/services/smartRouteService.ts").listSmartRoutes(), /chưa được liên kết/);
+  assert.equal(harness.values.has("user"), true);
+});

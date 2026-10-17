@@ -54,7 +54,7 @@ export async function apiRequest<T = any>(path: string, options: RequestOptions 
         expiredListeners.forEach((listener) => listener());
       }
     }
-    throw new ApiError(body?.message || `Yêu cầu thất bại (HTTP ${response.status}).`, response.status);
+    throw new ApiError(body?.error?.message || body?.message || `Yêu cầu thất bại (HTTP ${response.status}).`, response.status);
   }
   if (!body) throw new ApiError("Máy chủ trả về dữ liệu không hợp lệ. Kiểm tra địa chỉ API.", response.status);
   return body as T;
