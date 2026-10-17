@@ -37,7 +37,7 @@ export function DriverArrivalCard({ booking }: { booking: DriverBooking }) {
     {dispatch?.holdUntil && booking.coordination?.isHeld && <Text style={{ color: "#e8b66c" }}>Chờ dự kiến đến: {bookingTime(dispatch.holdUntil)}</Text>}
     {!dispatch && <>
       {button("Đã đến khu chờ & sẵn sàng", "arrive", !booking.coordination?.canArrive)}
-      {!booking.coordination?.canArrive && <Text style={ui.muted}>Có thể xác nhận từ 30 phút trước giờ hẹn.</Text>}
+      {!booking.coordination?.canArrive && <Text style={ui.muted}>Có thể xác nhận từ 12 giờ trước giờ hẹn.</Text>}
     </>}
     {dispatch?.status === "ready" && button("Tạm thời chưa sẵn sàng", "not-ready", false, true)}
     {dispatch?.status === "arrived" && button("Tôi đã sẵn sàng", "ready")}
