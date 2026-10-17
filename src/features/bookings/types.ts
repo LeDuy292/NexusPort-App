@@ -26,6 +26,22 @@ export interface DriverBooking {
   createdAt: string;
   gateType: string | null;
   containers: BookingContainer[];
+  dispatch: BookingDispatch | null;
+  coordination: { isLate: boolean; canArrive: boolean; canCall: boolean; canAcknowledge: boolean; isHeld: boolean };
+}
+
+export interface BookingDispatch {
+  status: "arrived" | "ready" | "called" | "acknowledged" | "withdrawn";
+  action: string;
+  arrivedAt: string;
+  readyAt: string | null;
+  calledAt: string | null;
+  callExpiresAt: string | null;
+  acknowledgedAt: string | null;
+  holdUntil: string | null;
+  message: string | null;
+  version: number;
+  updatedAt: string;
 }
 
 export interface BookingNotification {
@@ -44,4 +60,5 @@ export interface BookingFeed {
   bookings: DriverBooking[];
   notifications: BookingNotification[];
   unreadCount: number;
+  serverTime: string;
 }

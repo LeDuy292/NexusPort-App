@@ -14,3 +14,11 @@ export async function getBooking(id: string) {
 export async function markBookingNotificationRead(id: string) {
   await apiRequest(`/api/driver-bookings/notifications/${encodeURIComponent(id)}/read`, { method: "POST" });
 }
+
+export async function updateBookingArrival(booking: DriverBooking, action: "arrive" | "ready" | "not-ready" | "acknowledge") {
+  const response = await apiRequest<{ data: { booking: DriverBooking } }>(
+    "/api/booking-dispatch/" + encodeURIComponent(booking.id) + "/" + action,
+    { method: "POST", body: JSON.stringify({ expectedVersion: booking.dispatch?.version || 0 }) },
+  );
+  return response.data.booking;
+}

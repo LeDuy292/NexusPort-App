@@ -6,6 +6,7 @@ import { getBooking } from "../../src/features/bookings/bookingService";
 import { bookingTime, bookingTypeLabel, isApproved } from "../../src/features/bookings/bookingPresentation";
 import { BookingHeader, BookingStatus, ui } from "../../src/features/bookings/components/BookingUI";
 import type { DriverBooking } from "../../src/features/bookings/types";
+import { DriverArrivalCard } from "../../src/features/bookings/components/DriverArrivalCard";
 
 export default function BookingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -49,6 +50,7 @@ export default function BookingDetailScreen() {
           </TouchableOpacity>}
           {booking.rejectedReason && <Text style={{ color: "#fc5b5b" }}>Lý do: {booking.rejectedReason}</Text>}
         </View>
+        <DriverArrivalCard booking={booking} />
         <View style={ui.card}>
           <Text style={ui.title}>Xe & tài xế</Text>
           <Text style={ui.text}>Biển số: {booking.truckPlate || "Chưa được gán xe"}</Text>
