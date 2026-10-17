@@ -34,6 +34,8 @@ export function DriverArrivalCard({ booking }: { booking: DriverBooking }) {
     {dispatch && <Text style={ui.muted}>Đến lúc: {bookingTime(dispatch.arrivedAt)}{booking.coordination?.isLate ? " · Đến muộn" : ""}</Text>}
     {booking.dispatch?.status === "withdrawn" && <Text style={{ color: "#e8b66c" }}>Lịch hoặc phân công đã thay đổi. Kiểm tra lại trước khi xác nhận đến.</Text>}
     {dispatch?.message && <Text style={ui.text}>{dispatch.message}</Text>}
+    {booking.gateEntryOrder?.status === "active" && <Text style={{ color: "#79d69a" }}>Được phép đến cổng với xe {booking.gateEntryOrder.vehiclePlate}. Qua cổng trước: {bookingTime(booking.gateEntryOrder.validUntil)}.</Text>}
+    {booking.gateEntryOrder?.status === "expired" && <Text style={{ color: "#e8b66c" }}>Lệnh vào cổng đã hết hạn. Chờ điều độ gọi lại; booking vẫn được giữ.</Text>}
     {dispatch?.holdUntil && booking.coordination?.isHeld && <Text style={{ color: "#e8b66c" }}>Chờ dự kiến đến: {bookingTime(dispatch.holdUntil)}</Text>}
     {!dispatch && <>
       {button("Đã đến khu chờ & sẵn sàng", "arrive", !booking.coordination?.canArrive)}

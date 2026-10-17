@@ -27,6 +27,7 @@ export interface DriverBooking {
   gateType: string | null;
   containers: BookingContainer[];
   dispatch: BookingDispatch | null;
+  gateEntryOrder?: { id: string; status: "pending_ack" | "active" | "expired" | "revoked" | "consumed"; validFrom: string; validUntil: string; vehiclePlate: string } | null;
   coordination: { isLate: boolean; canArrive: boolean; canCall: boolean; canAcknowledge: boolean; isHeld: boolean };
 }
 
