@@ -24,7 +24,7 @@ function AuthenticatedStack() {
   }
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style={user?.role === 'Driver' ? 'dark' : 'light'} />
       <Stack
         screenOptions={{
           headerShown: false,

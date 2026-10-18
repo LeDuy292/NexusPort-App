@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { AppState } from "react-native";
 import { getBookingFeed, markBookingNotificationRead } from "./bookingService";
 import type { BookingFeed, BookingNotification } from "./types";
-import { subscribeDriverRealtime } from "../driver/services/realtimeService";
+import { subscribeDriverRealtime, subscribeYardRealtime } from "../driver/services/realtimeService";
 
 interface BookingContextValue {
   feed: BookingFeed | null;
@@ -56,6 +56,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     }, 15000);
     let disposed = false;
     let unsubscribe: (() => void) | undefined;
+    let unsubscribeYard: (() => void) | undefined;
     void subscribeDriverRealtime({
       onConnected: () => { if (!disposed) { setRealtimeConnected(true); void reload(); } },
       onDisconnected: () => { if (!disposed) setRealtimeConnected(false); },
@@ -63,8 +64,10 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       onBookingDispatchUpdated: () => { if (!disposed) void reload(); },
     }).then(cleanup => { if (disposed) cleanup(); else unsubscribe = cleanup; })
       .catch(() => { if (!disposed) setRealtimeConnected(false); });
+    void subscribeYardRealtime(() => { if (!disposed) void reload(); })
+      .then(cleanup => { if (disposed) cleanup(); else unsubscribeYard = cleanup; }).catch(() => {});
     const subscription = AppState.addEventListener("change", (state) => { if (state === "active") void reload(); });
-    return () => { disposed = true; mounted.current = false; unsubscribe?.(); clearInterval(timer); subscription.remove(); };
+    return () => { disposed = true; mounted.current = false; unsubscribe?.(); unsubscribeYard?.(); clearInterval(timer); subscription.remove(); };
   }, [reload]);
 
   useEffect(() => {

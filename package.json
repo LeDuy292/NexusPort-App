@@ -39,7 +39,8 @@
     "web:offline": "node scripts/expo.cjs start --web --offline",
     "test:auth": "node --test tests/auth.test.cjs",
     "test:bookings": "node --test tests/bookings.test.cjs",
-    "test:smart-route": "node --test tests/smart-route.test.cjs"
+    "test:smart-route": "node --test tests/smart-route.test.cjs",
+    "test:journey": "node --test tests/journey.test.cjs"
   },
   "private": true
 }

@@ -13,6 +13,9 @@ export interface YardLayout {
   blocks: Array<{ code: string; label: string; x: number; y: number; width: number; height: number; bays: number; rows: number; tiers: number }>;
   slots: Array<{ id: string; block: string; bay: number; row: number; tier: number; status: string }>;
 }
+export interface YardMap {
+  version: string; nodes: YardNode[]; edges: YardEdge[]; layout?: YardLayout;
+}
 export interface SmartRoute {
   containerId: string; containerNumber: string; bookingId: string; bookingCode?: string;
   bookingType?: string; driverId?: string; driverName?: string; truckPlate?: string;
@@ -24,7 +27,7 @@ export interface SmartRoute {
     revision: string; generatedAt: string; refreshAfterSeconds: number; mapVersion: string | null;
     origin: YardNode | null; destinationNode: YardNode | null; waypoints: YardNode[]; segments: YardEdge[];
     directions: string[]; distanceMeters: number | null; estimatedSeconds: number | null; rerouted: boolean;
-    map: { version: string; nodes: YardNode[]; edges: YardEdge[]; layout?: YardLayout } | null;
+    map: YardMap | null;
   };
   journey?: {
     phase: "to_yard" | "at_yard" | "ready_for_gate_out" | "exited";
@@ -41,6 +44,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export function listSmartRoutes(): Promise<SmartRoute[]> {
   return request("/drivers/me/routes");
+}
+
+export function getDriverYardMap(): Promise<{ map: YardMap | null; errorCode?: string }> {
+  return request('/drivers/me/yard-map');
 }
 
 export function getSmartRoute(containerId: string, bookingId: string): Promise<SmartRoute> {

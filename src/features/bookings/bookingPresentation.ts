@@ -1,12 +1,12 @@
 export const BOOKING_STATUS: Record<string, { label: string; color: string }> = {
-  pending: { label: "Chờ duyệt", color: "#f6ad55" },
-  approved: { label: "Đã duyệt", color: "#48bb78" },
-  ready: { label: "Sẵn sàng vào cổng", color: "#63b3ed" },
-  checked_in: { label: "Đã vào cổng", color: "#9f7aea" },
-  completed: { label: "Hoàn thành", color: "#48bb78" },
-  rejected: { label: "Bị từ chối", color: "#fc5b5b" },
-  canceled: { label: "Đã hủy", color: "#fc5b5b" },
-  expired: { label: "Hết hạn", color: "#aaa" },
+  pending: { label: "Chờ duyệt", color: "#a16207" },
+  approved: { label: "Đã duyệt", color: "#15803d" },
+  ready: { label: "Sẵn sàng vào cổng", color: "#0369a1" },
+  checked_in: { label: "Đã vào cổng", color: "#7c3aed" },
+  completed: { label: "Xong giao nhận", color: "#15803d" },
+  rejected: { label: "Bị từ chối", color: "#b91c1c" },
+  canceled: { label: "Đã hủy", color: "#b91c1c" },
+  expired: { label: "Hết hạn", color: "#64748b" },
 };
 
 export const isApproved = (status: string) => ["approved", "ready"].includes(status.toLowerCase());

@@ -6,7 +6,6 @@ import { getBooking } from "../../src/features/bookings/bookingService";
 import { bookingTime, bookingTypeLabel, isApproved } from "../../src/features/bookings/bookingPresentation";
 import { BookingHeader, BookingStatus, ui } from "../../src/features/bookings/components/BookingUI";
 import type { DriverBooking } from "../../src/features/bookings/types";
-import { DriverArrivalCard } from "../../src/features/bookings/components/DriverArrivalCard";
 
 export default function BookingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,27 +29,28 @@ export default function BookingDetailScreen() {
     <BookingHeader title="Chi tiết booking" />
     <ScrollView contentContainerStyle={ui.content}>
       {error ? <View style={ui.card}>
-        <Text style={{ color: "#fc5b5b" }}>{error}</Text>
+        <Text style={{ color: "#b91c1c" }}>{error}</Text>
         <TouchableOpacity onPress={() => setRevision((value) => value + 1)}><Text style={{ color: "#ff682c" }}>Thử lại</Text></TouchableOpacity>
       </View> : !booking ? <ActivityIndicator color="#ff682c" /> : <>
         <View style={ui.card}>
-          <Text style={{ color: "white", fontSize: 24, fontWeight: "700" }}>{booking.bookingCode}</Text>
+          <Text style={{ color: "#172b3a", fontSize: 24, fontWeight: "700" }}>{booking.bookingCode}</Text>
           <BookingStatus status={booking.status} />
           <Text style={ui.text}>{bookingTypeLabel(booking.bookingType)}</Text>
           <Text style={ui.muted}>{booking.carrierName}</Text>
+          {booking.status === 'completed' && <Text style={ui.muted}>Đã xong giao nhận tại bãi. Hành trình chỉ hoàn tất khi hệ thống ghi nhận Gate Out.</Text>}
         </View>
         <View style={[ui.card, { borderColor: isApproved(booking.status) ? "#48bb7860" : "#f6ad5560" }]}>
           <Text style={ui.title}>{isApproved(booking.status) ? "Lịch hẹn đã được duyệt" : booking.status === "pending" ? "Khung giờ đề xuất" : "Khung giờ booking"}</Text>
           <Text style={ui.text}>Từ: {bookingTime(booking.appointmentStart)}</Text>
           <Text style={ui.text}>Đến: {bookingTime(booking.appointmentEnd)}</Text>
-          {booking.status === "pending" && <Text style={{ color: "#f6ad55", lineHeight: 21 }}>Đang chờ điều độ duyệt. Chưa khởi hành theo lịch này cho đến khi có xác nhận.</Text>}
+          {booking.status === "pending" && <Text style={{ color: "#a16207", lineHeight: 21 }}>Đang chờ điều độ duyệt. Chưa khởi hành theo lịch này cho đến khi có xác nhận.</Text>}
           {booking.approvedAt && <Text style={ui.muted}>Duyệt lúc: {bookingTime(booking.approvedAt)}</Text>}
           {isApproved(booking.status) && <TouchableOpacity onPress={() => router.push("/(driver)/appointments")}>
-            <Text style={{ color: "#63b3ed", fontWeight: "700" }}>Xem trong lịch hẹn →</Text>
+            <Text style={{ color: "#0369a1", fontWeight: "700" }}>Xem trong lịch hẹn →</Text>
           </TouchableOpacity>}
-          {booking.rejectedReason && <Text style={{ color: "#fc5b5b" }}>Lý do: {booking.rejectedReason}</Text>}
+          {booking.rejectedReason && <Text style={{ color: "#b91c1c" }}>Lý do: {booking.rejectedReason}</Text>}
         </View>
-        <DriverArrivalCard booking={booking} />
+        <TouchableOpacity style={[ui.card, { backgroundColor: '#edf6f1', borderColor: '#8fbaa8' }]} onPress={() => router.push({ pathname: '/(driver)/yard-navigation', params: { bookingId: booking.id } })}><Text style={{ color: '#1d6c56', fontWeight: '700' }}>Theo dõi hành trình & các việc cần làm →</Text><Text style={ui.muted}>Sẵn sàng · cổng vào · giao nhận tại bãi · cổng ra</Text></TouchableOpacity>
         <View style={ui.card}>
           <Text style={ui.title}>Xe & tài xế</Text>
           <Text style={ui.text}>Biển số: {booking.truckPlate || "Chưa được gán xe"}</Text>
@@ -66,7 +66,7 @@ export default function BookingDetailScreen() {
           <Text style={ui.muted}>Số chì: {container.sealNumber || "Chưa có"}</Text>
           {container.customerName && <Text style={ui.muted}>Khách hàng: {container.customerName}</Text>}
           <TouchableOpacity accessibilityRole="button" onPress={() => router.push({ pathname: "/(driver)/yard-navigation", params: { bookingId: booking.id, containerId: container.id } } as any)} style={{ marginTop: 4, padding: 13, borderRadius: 12, borderWidth: 1, borderColor: "#ff922e70", backgroundColor: "#ff922e15" }}>
-            <Text style={{ color: "#ffad58", fontWeight: "700" }}>Smart Route · Điểm giao nhận & cổng ra →</Text>
+            <Text style={{ color: "#9a431b", fontWeight: "700" }}>Smart Route · Điểm giao nhận & cổng ra →</Text>
             <Text style={[ui.muted, { marginTop: 4 }]}>Tự cập nhật khi cổng xác nhận Gate In và Yard hoàn tất xử lý.</Text>
           </TouchableOpacity>
         </View>)}

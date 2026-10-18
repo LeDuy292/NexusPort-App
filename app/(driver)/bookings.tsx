@@ -13,8 +13,8 @@ export default function DriverBookings() {
   return <View style={ui.page}>
     <BookingHeader title="Booking được giao" />
     <View style={{ flexDirection: "row", paddingHorizontal: 20, gap: 10, paddingBottom: 16 }}>
-      {FILTERS.map((item) => <TouchableOpacity key={item.key} onPress={() => setFilter(item.key)} style={{ padding: 10, borderRadius: 20, backgroundColor: filter === item.key ? "#ff682c" : "#222" }}>
-        <Text style={{ color: "white", fontSize: 12, fontWeight: "600" }}>{item.label}</Text>
+      {FILTERS.map((item) => <TouchableOpacity key={item.key} onPress={() => setFilter(item.key)} style={{ padding: 10, borderRadius: 20, backgroundColor: filter === item.key ? "#ffedd5" : "#fff" }}>
+        <Text style={{ color: "#172b3a", fontSize: 12, fontWeight: "600" }}>{item.label}</Text>
       </TouchableOpacity>)}
     </View>
     <ScrollView contentContainerStyle={ui.content} refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void reload()} tintColor="#ff682c" />}>

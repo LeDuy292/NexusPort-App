@@ -20,10 +20,10 @@ export default function DriverNotifications() {
     <BookingHeader title={`Thông báo${feed?.unreadCount ? ` · ${feed.unreadCount} mới` : ""}`} />
     <ScrollView contentContainerStyle={ui.content} refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void reload()} tintColor="#ff682c" />}>
       <BookingFeedState />
-      {readError && <Text style={{ color: "#f6ad55" }}>{readError}</Text>}
-      {feed?.notifications.map((item) => <TouchableOpacity key={item.id} style={[ui.card, { borderColor: item.isRead ? "#282828" : "#ff682c70" }]} onPress={() => void open(item)}>
+      {readError && <Text style={{ color: "#a16207" }}>{readError}</Text>}
+      {feed?.notifications.map((item) => <TouchableOpacity key={item.id} style={[ui.card, { borderColor: item.isRead ? "#e2e8f0" : "#ff682c70" }]} onPress={() => void open(item)}>
         <View style={ui.row}>
-          <Ionicons name={item.kind === "approved" ? "checkmark-circle" : "notifications"} size={24} color={item.kind === "approved" ? "#48bb78" : "#ff682c"} />
+          <Ionicons name={item.kind === "approved" ? "checkmark-circle" : "notifications"} size={24} color={item.kind === "approved" ? "#15803d" : "#ff682c"} />
           <Text style={[ui.title, { flex: 1 }]}>{item.title}</Text>
           {!item.isRead && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#ff682c" }} />}
         </View>

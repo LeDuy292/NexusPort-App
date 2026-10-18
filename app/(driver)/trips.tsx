@@ -20,18 +20,18 @@ const STATUS_CONFIG: Record<
   string,
   { label: string; color: string; icon: string }
 > = {
-  Assigned: { label: "Được phân công", color: "#63b3ed", icon: "clipboard-check-outline" },
-  Acknowledged: { label: "Đã xác nhận", color: "#9f7aea", icon: "hand-okay" },
-  "Vehicle Picked Up": { label: "Đã lấy xe", color: "#f6ad55", icon: "truck-outline" },
-  "Container Picked Up": { label: "Đã lấy container", color: "#f6ad55", icon: "package-variant" },
+  Assigned: { label: "Được phân công", color: "#0369a1", icon: "clipboard-check-outline" },
+  Acknowledged: { label: "Đã xác nhận", color: "#7c3aed", icon: "hand-okay" },
+  "Vehicle Picked Up": { label: "Đã lấy xe", color: "#a16207", icon: "truck-outline" },
+  "Container Picked Up": { label: "Đã lấy container", color: "#a16207", icon: "package-variant" },
   "Gate In": { label: "Đã Gate In", color: "#ff682c", icon: "boom-gate-up-outline" },
   "In Transit": { label: "Đang vận chuyển", color: "#ff682c", icon: "truck-fast" },
-  "Arrived at Yard": { label: "Đã đến Bãi", color: "#48bb78", icon: "map-marker-check" },
-  "Container Delivered": { label: "Đã giao container", color: "#48bb78", icon: "package-variant-closed-check" },
-  "Gate Out Completed": { label: "Đã Gate Out", color: "#48bb78", icon: "boom-gate-outline" },
-  "Vehicle Returned": { label: "Đã trả xe", color: "#48bb78", icon: "truck-check-outline" },
-  Completed: { label: "Hoàn thành", color: "#48bb78", icon: "check-circle" },
-  Cancelled: { label: "Đã hủy", color: "#fc5b5b", icon: "close-circle" },
+  "Arrived at Yard": { label: "Đã đến Bãi", color: "#15803d", icon: "map-marker-check" },
+  "Container Delivered": { label: "Đã giao container", color: "#15803d", icon: "package-variant-closed-check" },
+  "Gate Out Completed": { label: "Đã Gate Out", color: "#15803d", icon: "boom-gate-outline" },
+  "Vehicle Returned": { label: "Đã trả xe", color: "#15803d", icon: "truck-check-outline" },
+  Completed: { label: "Hoàn thành", color: "#15803d", icon: "check-circle" },
+  Cancelled: { label: "Đã hủy", color: "#b91c1c", icon: "close-circle" },
 };
 
 const FILTER_TABS: { key: string; label: string }[] = [
@@ -124,7 +124,7 @@ export default function TripsList() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#080808" }}>
+    <View style={{ flex: 1, backgroundColor: "#f4f6f8" }}>
       {/* Header */}
       <LinearGradient
         colors={["rgba(255,104,44,0.12)", "transparent"]}
@@ -134,13 +134,13 @@ export default function TripsList() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <TouchableOpacity
               onPress={() => router.back()}
-              style={{ width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.07)" }}
+              style={{ width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "#e8edf2" }}
             >
-              <Ionicons name="arrow-back" size={18} color="white" />
+              <Ionicons name="arrow-back" size={18} color="#172b3a" />
             </TouchableOpacity>
             <View>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>
+                <Text style={{ color: "#172b3a", fontSize: 18, fontWeight: "bold" }}>
                   Chuyến vận chuyển
                 </Text>
                 {realtimeOnline && (
@@ -149,13 +149,13 @@ export default function TripsList() {
                       width: 7,
                       height: 7,
                       borderRadius: 4,
-                      backgroundColor: "#48bb78",
+                      backgroundColor: "#15803d",
                     }}
                   />
                 )}
               </View>
               {total > 0 && (
-                <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 1 }}>
+                <Text style={{ color: "#64748b", fontSize: 12, marginTop: 1 }}>
                   {total} chuyến
                 </Text>
               )}
@@ -165,9 +165,9 @@ export default function TripsList() {
           {/* Refresh icon */}
           <TouchableOpacity
             onPress={onRefresh}
-            style={{ width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.07)" }}
+            style={{ width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "#e8edf2" }}
           >
-            <Ionicons name="refresh" size={18} color="rgba(255,255,255,0.6)" />
+            <Ionicons name="refresh" size={18} color="#64748b" />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -189,12 +189,12 @@ export default function TripsList() {
                 paddingHorizontal: 14,
                 paddingVertical: 7,
                 borderRadius: 20,
-                backgroundColor: active ? "#ff682c" : "rgba(255,255,255,0.06)",
+                backgroundColor: active ? "#ff682c" : "#e8edf2",
                 borderWidth: 1,
-                borderColor: active ? "#ff682c" : "rgba(255,255,255,0.08)",
+                borderColor: active ? "#ff682c" : "#e8edf2",
               }}
             >
-              <Text style={{ color: active ? "white" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: "600" }}>
+              <Text style={{ color: active ? "white" : "#64748b", fontSize: 13, fontWeight: "600" }}>
                 {tab.label}
               </Text>
             </TouchableOpacity>
@@ -206,17 +206,17 @@ export default function TripsList() {
       {loading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator size="large" color="#ff682c" />
-          <Text style={{ color: "rgba(255,255,255,0.4)", marginTop: 12, fontSize: 14 }}>
+          <Text style={{ color: "#64748b", marginTop: 12, fontSize: 14 }}>
             Đang tải chuyến...
           </Text>
         </View>
       ) : trips.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
-          <MaterialCommunityIcons name="truck-outline" size={64} color="rgba(255,255,255,0.1)" />
-          <Text style={{ color: "rgba(255,255,255,0.3)", fontSize: 16, fontWeight: "600", marginTop: 16 }}>
+          <MaterialCommunityIcons name="truck-outline" size={64} color="#e8edf2" />
+          <Text style={{ color: "#64748b", fontSize: 16, fontWeight: "600", marginTop: 16 }}>
             Không có chuyến nào
           </Text>
-          <Text style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, textAlign: "center", marginTop: 6 }}>
+          <Text style={{ color: "#64748b", fontSize: 13, textAlign: "center", marginTop: 6 }}>
             Kéo xuống để làm mới danh sách
           </Text>
         </View>
@@ -237,7 +237,7 @@ export default function TripsList() {
           {trips.map((trip) => {
             const cfg = STATUS_CONFIG[trip.status] ?? {
               label: trip.status,
-              color: "#aaa",
+              color: "#64748b",
               icon: "information-outline",
             };
             const isActive = !["Completed", "Cancelled"].includes(trip.status);
@@ -249,11 +249,11 @@ export default function TripsList() {
                 style={{
                   borderRadius: 18,
                   padding: 16,
-                  backgroundColor: "rgba(255,255,255,0.04)",
+                  backgroundColor: "#e8edf2",
                   borderWidth: 1,
                   borderColor: isActive
                     ? `${cfg.color}30`
-                    : "rgba(255,255,255,0.06)",
+                    : "#e8edf2",
                 }}
               >
                 {/* Top row */}
@@ -276,10 +276,10 @@ export default function TripsList() {
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: "white", fontWeight: "700", fontSize: 15 }}>
+                    <Text style={{ color: "#172b3a", fontWeight: "700", fontSize: 15 }}>
                       {trip.containerNo || "—"}
                     </Text>
-                    <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 2 }}>
+                    <Text style={{ color: "#64748b", fontSize: 12, marginTop: 2 }}>
                       {trip.tripCode} · {trip.bookingType || "—"}
                     </Text>
                   </View>
@@ -306,29 +306,29 @@ export default function TripsList() {
                     gap: 16,
                     paddingTop: 10,
                     borderTopWidth: 1,
-                    borderTopColor: "rgba(255,255,255,0.05)",
+                    borderTopColor: "#e8edf2",
                   }}
                 >
                   {trip.truckPlate && (
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                      <MaterialCommunityIcons name="truck" size={12} color="rgba(255,255,255,0.3)" />
-                      <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
+                      <MaterialCommunityIcons name="truck" size={12} color="#64748b" />
+                      <Text style={{ color: "#64748b", fontSize: 12 }}>
                         {trip.truckPlate}
                       </Text>
                     </View>
                   )}
                   {trip.yardBlock && (
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                      <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.3)" />
-                      <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
+                      <Ionicons name="location-outline" size={12} color="#64748b" />
+                      <Text style={{ color: "#64748b", fontSize: 12 }}>
                         {trip.yardBlock}{trip.yardSlot ? ` · ${trip.yardSlot}` : ""}
                       </Text>
                     </View>
                   )}
                   {trip.appointmentStart && (
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                      <Ionicons name="time-outline" size={12} color="rgba(255,255,255,0.3)" />
-                      <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
+                      <Ionicons name="time-outline" size={12} color="#64748b" />
+                      <Text style={{ color: "#64748b", fontSize: 12 }}>
                         {formatDate(trip.appointmentStart)}
                       </Text>
                     </View>
