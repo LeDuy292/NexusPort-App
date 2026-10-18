@@ -1,10 +1,15 @@
 # Driver journey · NXP-114
 
-The Driver home screen and `yard-navigation` share one journey component.
-The bottom navigation separates Journey, Bookings, Notifications and Account.
+The Driver home screen restores the overview dashboard in a light theme, with
+booking counts, shortcuts, the next approved appointment and recent bookings.
+The bottom navigation separates Overview, Journey, Bookings, Notifications and
+Account. `yard-navigation` opens the dedicated journey component.
 Booking details remain read-only; readiness, arrival and container confirmation
 actions belong to their current journey stage. Old QR/container demo URLs redirect
 to the canonical journey or assigned bookings rather than simulating success.
+Pending bookings show a clear approval notice instead of proposed appointment
+times, a timeline or arrival actions. Schedules become visible after approval;
+previously approved bookings remain readable during and after the journey.
 
 ## Stages and evidence
 

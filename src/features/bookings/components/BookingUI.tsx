@@ -2,7 +2,7 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View, type ViewS
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useBookings } from "../BookingProvider";
-import { BOOKING_STATUS, bookingTime, bookingTypeLabel, isApproved } from "../bookingPresentation";
+import { BOOKING_STATUS, bookingTime, bookingTypeLabel, canViewAppointment, isApproved } from "../bookingPresentation";
 import type { DriverBooking } from "../types";
 
 export const ui = StyleSheet.create({
@@ -39,12 +39,23 @@ export function BookingCard({ booking, style }: { booking: DriverBooking; style?
     </View>
     <Text style={ui.text}>{bookingTypeLabel(booking.bookingType)} · {booking.truckPlate || "Chưa gán xe"}</Text>
     <Text style={ui.muted}>{booking.containers.map((item) => item.containerNo).join(", ") || "Chưa có container"}</Text>
-    <Text style={{ color: "#0369a1", fontSize: 13 }}>{bookingTime(booking.appointmentStart)}</Text>
+    {canViewAppointment(booking.status)
+      ? <Text style={{ color: "#0369a1", fontSize: 13 }}>{bookingTime(booking.appointmentStart)}</Text>
+      : booking.status.toLowerCase() === 'pending' && <Text style={{ color: '#a16207', fontSize: 13 }}>Chờ duyệt booking · Lịch hẹn chưa được mở</Text>}
     {isApproved(booking.status) && booking.dispatch && booking.dispatch.status !== "withdrawn" && <Text style={{ color: booking.dispatch.status === "called" ? "#b45309" : "#15803d", fontSize: 13 }}>
       {{ arrived: "Đã đến · chưa sẵn sàng", ready: booking.coordination?.isHeld ? "Điều độ yêu cầu chờ thêm" : "Sẵn sàng · chờ điều độ", called: "Điều độ đang gọi · chạm để phản hồi", acknowledged: "Đã nhận lệnh gọi" }[booking.dispatch.status]}
     </Text>}
     <Text style={ui.muted}>{booking.status === "pending" ? "Khung giờ đề xuất · Đang chờ điều độ duyệt" : booking.carrierName}</Text>
   </TouchableOpacity>;
+}
+
+export function BookingApprovalNotice({ pendingCount = 0 }: { pendingCount?: number }) {
+  return <View accessibilityRole="alert" style={[ui.card, { backgroundColor: '#fff9eb', borderColor: '#e8d6a1' }]}>
+    <View style={ui.row}><Ionicons name="time-outline" size={23} color="#a16207" /><Text style={[ui.title, { flex: 1, color: '#80550b' }]}>{pendingCount ? 'Booking đang chờ duyệt' : 'Chưa có lịch hẹn đã duyệt'}</Text></View>
+    <Text style={ui.text}>{pendingCount ? `Bạn có ${pendingCount} booking đang chờ điều độ duyệt. ` : ''}Lịch hẹn chỉ hiển thị sau khi booking được duyệt. Khi có kết quả, ứng dụng sẽ tự cập nhật và thông báo cho bạn.</Text>
+    <Text style={ui.muted}>Bạn vẫn xem được thông tin và trạng thái booking trong mục Booking được giao.</Text>
+    <TouchableOpacity accessibilityRole="button" onPress={() => router.push('/(driver)/bookings')}><Text style={{ color: '#80550b', fontWeight: '700', fontSize: 13 }}>Xem booking được giao →</Text></TouchableOpacity>
+  </View>;
 }
 
 export function BookingFeedState() {

@@ -50,7 +50,7 @@ export function containerProgress(booking: DriverBooking, routes: SmartRoute[]) 
 
 export function bookingJourneyNotice(booking: DriverBooking): string | null {
   const status = booking.status.toLowerCase();
-  if (status === 'pending') return 'Booking đang chờ duyệt. Chưa thể xác nhận sẵn sàng hoặc vào cổng.';
+  if (status === 'pending') return 'Booking đang chờ duyệt nên chưa có lịch hẹn để thực hiện. Lịch và các bước xác nhận chỉ mở sau khi điều độ duyệt. Ứng dụng sẽ tự cập nhật khi có kết quả.';
   if (['canceled', 'cancelled', 'rejected', 'expired'].includes(status)) return 'Booking này không còn được thực hiện. Bạn có thể xem thông tin và chọn booking khác.';
   return null;
 }

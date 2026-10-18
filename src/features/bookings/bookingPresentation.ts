@@ -10,6 +10,8 @@ export const BOOKING_STATUS: Record<string, { label: string; color: string }> = 
 };
 
 export const isApproved = (status: string) => ["approved", "ready"].includes(status.toLowerCase());
+// Viewing an approved schedule is distinct from permission to enter the gate.
+export const canViewAppointment = (status: string) => ["approved", "ready", "checked_in", "checkedin", "completed"].includes(status.toLowerCase());
 export const bookingTypeLabel = (type: string) => type.toLowerCase() === "dropoff" ? "Hạ container" : "Nhận container";
 
 export function bookingTime(value?: string | null) {

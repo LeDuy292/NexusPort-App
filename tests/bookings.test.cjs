@@ -22,3 +22,19 @@ test("first arrival sends version zero; conflicting commands are not retried aut
  assert.deepEqual(JSON.parse(harness.requests[0].options.body),{expectedVersion:0});
  assert.ok(harness.values.get("user"));
 });
+
+test("unapproved bookings cannot expose an appointment even when a proposed time exists",()=>{
+ const {canViewAppointment}=createHarness(()=>{}).load("src/features/bookings/bookingPresentation.ts");
+ const pending={status:"pending",appointmentStart:"2030-10-18T02:00:00Z",approvedAt:null};
+ assert.equal(canViewAppointment(pending.status),false);
+ for(const status of ["rejected","canceled","cancelled","expired"]) assert.equal(canViewAppointment(status),false);
+});
+
+test("approved schedules remain viewable in history without granting another gate entry",()=>{
+ const {canViewAppointment,isApproved}=createHarness(()=>{}).load("src/features/bookings/bookingPresentation.ts");
+ for(const status of ["approved","ready","APPROVED"]) assert.equal(canViewAppointment(status),true);
+ for(const status of ["checked_in","completed"]){
+  assert.equal(canViewAppointment(status),true);
+  assert.equal(isApproved(status),false);
+ }
+});

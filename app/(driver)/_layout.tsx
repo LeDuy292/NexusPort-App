@@ -9,7 +9,8 @@ export default function DriverLayout() {
   const path = usePathname();
   const insets = useSafeAreaInsets();
   const tabs = [
-    { title: 'Hành trình', path: '/(driver)', icon: 'navigate-outline', active: path === '/' || path.includes('yard-navigation') },
+    { title: 'Tổng quan', path: '/(driver)', icon: 'home-outline', active: path === '/' || path === '/(driver)' },
+    { title: 'Hành trình', path: '/(driver)/yard-navigation', icon: 'navigate-outline', active: path.includes('yard-navigation') },
     { title: 'Booking', path: '/(driver)/bookings', icon: 'reader-outline', active: path.includes('booking') || path.includes('appointments') },
     { title: 'Thông báo', path: '/(driver)/notifications', icon: 'notifications-outline', active: path.includes('notifications') },
     { title: 'Tài khoản', path: '/(driver)/account', icon: 'person-circle-outline', active: path.includes('account') },

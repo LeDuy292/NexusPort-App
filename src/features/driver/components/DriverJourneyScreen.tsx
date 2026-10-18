@@ -105,6 +105,7 @@ export default function DriverJourneyScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: journey.error || feedError ? '#b45309' : '#1d6c56' }} /><Text style={ui.muted}>{journey.error || feedError ? 'Chưa xác nhận lại kết nối' : journey.connected ? 'Đang đồng bộ sự kiện' : 'Tự kiểm tra mỗi 15 giây'}{journey.updatedAt ? ` · ${new Date(journey.updatedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}` : ''}</Text></View>
         </View>
         {notice && <View style={styles.note}><Text style={ui.text}>{notice}</Text></View>}
+        {!notice && <>
         {booking.containers.length > 1 && <View style={{ gap: 8 }}><Text style={ui.muted}>Container đang theo dõi · {!journey.loading && !journey.error ? `${containers?.confirmed} / ${containers?.total} đã xác nhận` : `${booking.containers.length} container trong booking`}</Text><ScrollView horizontal contentContainerStyle={{ gap: 8 }}>{booking.containers.map(item => {
           const confirmed = journey.routes.some(route => route.bookingId === booking.id && route.containerId === item.id && route.journey?.containerConfirmedAt);
           return <TouchableOpacity key={item.id} accessibilityRole="button" accessibilityState={{ selected: item.id === container?.id }} disabled={acting} onPress={() => setContainerId(item.id)} style={[styles.chip, item.id === container?.id && styles.selectedChip]}><Text style={ui.text}>{confirmed ? '✓ ' : ''}{item.containerNo}</Text></TouchableOpacity>;
@@ -151,6 +152,7 @@ export default function DriverJourneyScreen() {
         {journey.mapWarning && <View style={styles.note}><Text style={styles.error}>{journey.mapWarning}</Text><TouchableOpacity accessibilityRole="button" onPress={() => void journey.reload()}><Text style={styles.link}>Thử tải lại bản đồ</Text></TouchableOpacity></View>}
         {route?.navigation?.message && <Text style={ui.muted}>{route.navigation.message}</Text>}
         {isCurrent && ['to_yard', 'to_exit'].includes(current) && route?.navigation?.status === 'available' && !journey.error && <View style={ui.card}><Text style={ui.title}>Hướng dẫn đến {route.navigation.destinationNode?.label}</Text>{route.navigation.directions.map((line, index) => <Text key={`${index}:${line}`} style={ui.text}>{index + 1}. {line}</Text>)}</View>}
+        </>}
       </>}
     </ScrollView>
     <Modal visible={!!modal} transparent animationType="slide" onRequestClose={() => { if (!acting) setModal(null); }}>
