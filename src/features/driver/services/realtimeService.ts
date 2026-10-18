@@ -12,15 +12,18 @@ export interface RealtimeHandlers {
 }
 
 /** Canonical Node Core changes; screens keep polling if the transport is unavailable. */
-export async function subscribeYardRealtime(onUpdate: () => void): Promise<() => void> {
+export async function subscribeYardRealtime(onUpdate: () => void, onConnection?: (connected: boolean) => void): Promise<() => void> {
   const token = (await readSession())?.token;
   if (!token) return () => {};
   const socket = io(await getNodeCoreBaseUrl(), {
     auth: { token }, transports: ["websocket", "polling"],
-    reconnection: true, reconnectionAttempts: 5,
+    reconnection: true, reconnectionAttempts: Infinity,
   });
-  const events = ["connect", "yard.operation.completed", "dispatcher.status.updated", "gate.transaction.updated", "yard.route.updated"];
+  const events = ["connect", "yard.operation.completed", "driver.journey.updated", "gate.transaction.updated", "yard.route.updated"];
   events.forEach(event => socket.on(event, onUpdate));
+  socket.on('connect', () => onConnection?.(true));
+  socket.on('disconnect', () => onConnection?.(false));
+  socket.on('connect_error', () => onConnection?.(false));
   return () => { events.forEach(event => socket.off(event, onUpdate)); socket.disconnect(); };
 }
 
