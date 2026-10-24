@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../auth/AuthProvider';
 import { useBookings } from '../../bookings/BookingProvider';
 import { BookingFeedState, ui } from '../../bookings/components/BookingUI';
@@ -88,8 +88,17 @@ export default function DriverJourneyScreen() {
 
   return <View style={ui.page}>
     <View style={styles.header}>
-      <View style={{ flex: 1 }}><Text style={styles.eyebrow}>NEXUSPORT / TÀI XẾ</Text><Text style={styles.heading}>Hành trình của bạn</Text><Text style={ui.muted}>Xin chào, {feed?.profile?.fullName || user?.fullName || user?.username}</Text></View>
-      <TouchableOpacity accessibilityLabel="Thông báo" onPress={() => router.push('/(driver)/notifications')} style={styles.iconButton}><Ionicons name="notifications-outline" size={22} color="#172b3a" /></TouchableOpacity>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.eyebrow}>NEXUSPORT / TÀI XẾ</Text>
+        <Text style={styles.heading}>Hành trình của bạn</Text>
+        <Text style={ui.muted}>Xin chào, {feed?.profile?.fullName || user?.fullName || user?.username}</Text>
+      </View>
+      <TouchableOpacity accessibilityLabel="Báo sự cố SOS" onPress={() => router.push('/(driver)/incident' as any)} style={[styles.iconButton, { backgroundColor: '#fee2e2' }]}>
+        <Ionicons name="warning-outline" size={20} color="#dc2626" />
+      </TouchableOpacity>
+      <TouchableOpacity accessibilityLabel="Thông báo" onPress={() => router.push('/(driver)/notifications' as any)} style={styles.iconButton}>
+        <Ionicons name="notifications-outline" size={20} color="#172b3a" />
+      </TouchableOpacity>
     </View>
     <ScrollView contentContainerStyle={[ui.content, { paddingTop: 8 }]} refreshControl={<RefreshControl refreshing={journey.refreshing || feedLoading} onRefresh={() => void refresh()} tintColor="#1d6c56" />}>
       <BookingFeedState />
@@ -128,7 +137,27 @@ export default function DriverJourneyScreen() {
           {selectedTime && <Text style={ui.muted}>Ghi nhận: {bookingTime(selectedTime)}</Text>}
           {!isCurrent && <TouchableOpacity onPress={() => setViewStage(current)} style={styles.note}><Text style={styles.link}>{stepState === 'done' ? 'Đang xem lại chặng đã hoàn tất.' : 'Xem trước hướng dẫn chặng này.'} Trở về chặng hiện tại →</Text></TouchableOpacity>}
           {isCurrent && selected === 'ready' && <DriverArrivalCard booking={booking} disabled={!canCoordinate} />}
-          {isCurrent && selected === 'gate_in' && <View style={styles.note}><Text style={ui.text}>Đến GATE-01 với xe {booking.truckPlate}. Camera sẽ kiểm tra biển số và lệnh vào cổng.</Text><Text style={ui.muted}>Hệ thống hiện mô phỏng xe qua barie trong 10 giây sau khi xác minh thành công. Bước tiếp theo mở khi API ghi nhận Gate In.</Text><Text style={ui.muted}>Lệnh có hiệu lực đến {bookingTime(booking.gateEntryOrder?.validUntil)}.</Text></View>}
+          {isCurrent && selected === 'gate_in' && <View style={styles.note}>
+            <Text style={ui.text}>Đến GATE-01 với xe {booking.truckPlate}. Camera sẽ kiểm tra biển số và lệnh vào cổng.</Text>
+            <Text style={ui.muted}>Hệ thống hiện mô phỏng xe qua barie trong 10 giây sau khi xác minh thành công. Bước tiếp theo mở khi API ghi nhận Gate In.</Text>
+            <Text style={ui.muted}>Lệnh có hiệu lực đến {bookingTime(booking.gateEntryOrder?.validUntil)}.</Text>
+            <TouchableOpacity
+              onPress={() => router.push({ pathname: '/(driver)/qr-checkin', params: { bookingId: booking.id } })}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                backgroundColor: '#1d6c56',
+                paddingVertical: 12,
+                borderRadius: 12,
+                marginTop: 6,
+              }}
+            >
+              <MaterialCommunityIcons name="qrcode-scan" size={18} color="#fff" />
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>Xuất trình mã e-Pass / QR vào cổng</Text>
+            </TouchableOpacity>
+          </View>}
           {isCurrent && selected === 'to_yard' && <>
             <Text style={ui.text}>{target ? `Đang trên đường tới ${target}. Trạng thái này được giữ đến khi bạn xác nhận đã đến.` : route ? 'Đã vào bãi. Đang chờ điểm giao nhận được phân công.' : 'Đã ghi nhận vào cổng. Đang đồng bộ điểm giao nhận và lộ trình.'}</Text>
             {route?.navigation?.status === 'available' && <Text style={ui.muted}>{Math.round(route.navigation.distanceMeters || 0)} m · khoảng {Math.max(1, Math.ceil((route.navigation.estimatedSeconds || 0) / 60))} phút</Text>}
@@ -157,13 +186,28 @@ export default function DriverJourneyScreen() {
     </ScrollView>
     <Modal visible={!!modal} transparent animationType="slide" onRequestClose={() => { if (!acting) setModal(null); }}>
       <View style={styles.backdrop}><View accessibilityViewIsModal style={styles.sheet}>
-        <View style={ui.row}><Text style={ui.title}>{modal === 'confirm' ? 'Kiểm tra giao nhận container' : modal === 'arrive' ? 'Xác nhận đã đến' : modal === 'map' ? 'Sơ đồ cảng hiện tại' : step.title}</Text><TouchableOpacity accessibilityLabel="Đóng chi tiết" disabled={acting} onPress={() => setModal(null)} style={styles.iconButton}><Ionicons name="close" size={24} color="#172b3a" /></TouchableOpacity></View>
+        <View style={ui.row}><Text style={ui.title}>{modal === 'confirm' ? 'Kiểm tra giao nhận container & EIR' : modal === 'arrive' ? 'Xác nhận đã đến' : modal === 'map' ? 'Sơ đồ cảng hiện tại' : step.title}</Text><TouchableOpacity accessibilityLabel="Đóng chi tiết" disabled={acting} onPress={() => setModal(null)} style={styles.iconButton}><Ionicons name="close" size={24} color="#172b3a" /></TouchableOpacity></View>
         <ScrollView contentContainerStyle={{ gap: 14, paddingBottom: 16 }} keyboardShouldPersistTaps="handled">
           {modal === 'map' ? map : modal === 'details' ? <><Text style={ui.text}>{step.description}</Text><Text style={ui.text}>Booking: {booking?.bookingCode}</Text><Text style={ui.text}>Xe: {booking?.truckPlate || 'Chưa gán'}</Text><Text style={ui.text}>Container: {container?.containerNo || 'Chưa gán'}</Text><Text style={ui.text}>Điểm đến hiện tại: {target || 'Chưa có'}</Text><Text style={ui.muted}>Thời điểm hoàn tất chặng: {bookingTime(selectedTime)}</Text></> : modal === 'arrive' ? <><Text style={ui.text}>Xe đã dừng đúng tại {target || route?.navigation?.destinationNode?.label}? Chỉ xác nhận khi bạn đã tới điểm giao nhận.</Text>{button('Đúng vị trí · xác nhận đã đến', () => void execute('arrive'), !fresh)}</> : <>
-            <Text style={styles.bookingCode}>{container?.containerNo}</Text><Text style={ui.text}>Số chì: {container?.sealNumber || 'Chưa khai báo'} · {container?.containerType || 'Container'}</Text>
+            <Text style={styles.bookingCode}>{container?.containerNo}</Text>
+            <Text style={ui.text}>Số chì: {container?.sealNumber || 'Chưa khai báo'} · {container?.containerType || 'Container'}</Text>
+            <Text style={[ui.muted, { marginTop: -4 }]}>Khai báo tình trạng container khi nhân viên bãi hoàn tất hạ/bốc hàng:</Text>
             {([['OK', 'Đúng container · nguyên vẹn'], ['DAMAGED', 'Có hư hỏng'], ['ISSUE', 'Có vấn đề khác']] as const).map(([value, label]) => <TouchableOpacity key={value} disabled={acting} onPress={() => setCondition(value)} style={[styles.chip, value === condition && styles.selectedChip]}><Text style={ui.text}>{value === condition ? '●' : '○'} {label}</Text></TouchableOpacity>)}
-            <TextInput accessibilityLabel="Ghi chú tình trạng container" editable={!acting} multiline maxLength={1000} placeholder="Ghi chú tình trạng (bắt buộc nếu có vấn đề)" placeholderTextColor="#64748b" value={notes} onChangeText={setNotes} style={styles.input} />
-            {button('Xác nhận giao / nhận container', () => void execute('confirm'), !fresh || condition !== 'OK' && !notes.trim())}
+            {condition !== 'OK' && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
+                {['Móp vỏ/thùng', 'Rách/đứt seal', 'Thủng nóc', 'Khóa cửa kẹt/hỏng', 'Biến dạng kết cấu'].map((tag) => (
+                  <TouchableOpacity
+                    key={tag}
+                    onPress={() => setNotes((prev) => prev ? `${prev}, ${tag}` : tag)}
+                    style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: '#fee2e2', borderWidth: 1, borderColor: '#fca5a5' }}
+                  >
+                    <Text style={{ fontSize: 11, color: '#b91c1c', fontWeight: '600' }}>+ {tag}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+            <TextInput accessibilityLabel="Ghi chú tình trạng container" editable={!acting} multiline maxLength={1000} placeholder="Ghi chú tình trạng vỏ, seal (bắt buộc nếu có vấn đề)..." placeholderTextColor="#64748b" value={notes} onChangeText={setNotes} style={styles.input} />
+            {button('Xác nhận giao / nhận container & ký EIR', () => void execute('confirm'), !fresh || condition !== 'OK' && !notes.trim())}
           </>}
           {actionError && <Text accessibilityRole="alert" style={styles.error}>{actionError}</Text>}
         </ScrollView>

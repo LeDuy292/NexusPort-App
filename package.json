@@ -40,7 +40,13 @@
     "test:auth": "node --test tests/auth.test.cjs",
     "test:bookings": "node --test tests/bookings.test.cjs",
     "test:smart-route": "node --test tests/smart-route.test.cjs",
-    "test:journey": "node --test tests/journey.test.cjs"
+    "test:journey": "node --test tests/journey.test.cjs",
+    "test:trips": "node --test tests/trips.test.cjs",
+    "test:epass": "node --test tests/epass.test.cjs",
+    "test:incident": "node --test tests/incident.test.cjs",
+    "test:realtime": "node --test tests/realtime.test.cjs",
+    "test": "node --test tests/auth.test.cjs tests/bookings.test.cjs tests/smart-route.test.cjs tests/journey.test.cjs tests/trips.test.cjs tests/epass.test.cjs tests/incident.test.cjs tests/realtime.test.cjs",
+    "test:all": "node --test tests/auth.test.cjs tests/bookings.test.cjs tests/smart-route.test.cjs tests/journey.test.cjs tests/trips.test.cjs tests/epass.test.cjs tests/incident.test.cjs tests/realtime.test.cjs"
   },
   "private": true
 }
