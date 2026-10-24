@@ -8,11 +8,14 @@ import { BookingApprovalNotice, BookingCard, BookingFeedState, ui } from "../../
 import { canViewAppointment, isApproved } from "../../src/features/bookings/bookingPresentation";
 
 const ACTIONS = [
-  { label: "Hành trình", subtitle: "Các bước thực hiện & bản đồ bãi", icon: "map-marker-path", route: "/(driver)/yard-navigation", color: "#1d6c56" },
+  { label: "Lệnh vận chuyển", subtitle: "Chuyến xe được giao & 11 bước thực hiện", icon: "truck-fast-outline", route: "/(driver)/trips", color: "#ff682c" },
+  { label: "Hành trình Smart Route", subtitle: "Sơ đồ bãi 2D & hướng dẫn từng bước", icon: "map-marker-path", route: "/(driver)/yard-navigation", color: "#1d6c56" },
+  { label: "Check-in e-Pass", subtitle: "Mã QR xuất trình tại cổng cảng", icon: "qrcode-scan", route: "/(driver)/qr-checkin", color: "#0284c7" },
   { label: "Booking được giao", subtitle: "Xe, hàng hóa & trạng thái duyệt", icon: "clipboard-list-outline", route: "/(driver)/bookings", color: "#c45b22" },
   { label: "Lịch hẹn", subtitle: "Khung giờ booking đã duyệt", icon: "calendar-clock", route: "/(driver)/appointments", color: "#0369a1" },
-  { label: "Tài khoản", subtitle: "Thông tin tài xế & đăng xuất", icon: "card-account-details-outline", route: "/(driver)/account", color: "#6d5cb6" },
+  { label: "Báo sự cố (SOS)", subtitle: "Phản ánh xe, hàng hoặc sự cố tại bãi", icon: "alert-circle-outline", route: "/(driver)/incident", color: "#dc2626" },
   { label: "Thông báo", subtitle: "Phân công & kết quả duyệt", icon: "bell-outline", route: "/(driver)/notifications", color: "#15803d" },
+  { label: "Tài khoản", subtitle: "Thông tin tài xế & đăng xuất", icon: "card-account-details-outline", route: "/(driver)/account", color: "#6d5cb6" },
 ] as const;
 
 export default function DriverHome() {
@@ -62,7 +65,7 @@ export default function DriverHome() {
   return <View style={ui.page}>
     <View style={{ paddingTop: 54, paddingHorizontal: 20, paddingBottom: 24, gap: 20 }}>
       <View style={ui.row}>
-        <Text style={{ color: "#172b3a", fontSize: 22, fontWeight: "800" }}>NexusPort<Text style={{ color: "#c45b22" }}>.</Text></Text>
+        <Text style={{ color: "#172b3a", fontSize: 22, fontWeight: "800" }}>NexusPort<Text style={{ color: "#c45b22" }}>.</Text> Driver</Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <TouchableOpacity accessibilityLabel="Thông báo" onPress={() => router.push("/(driver)/notifications" as any)}>
             <Ionicons name="notifications-outline" size={24} color="#172b3a" />
@@ -105,10 +108,10 @@ export default function DriverHome() {
         </View>)}
       </View>
       {!loading && !error && feed?.profile && (!confirmedBookings.length || !nextAppointment && pendingCount > 0) && <BookingApprovalNotice pendingCount={pendingCount} />}
-      <Text style={ui.title}>Công việc của bạn</Text>
+      <Text style={ui.title}>Công việc & Nghiệp vụ tài xế</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
         {ACTIONS.map((action) => <TouchableOpacity key={action.label} onPress={() => router.push(action.route as any)} style={[ui.card, { width: "48%", minHeight: 135 }]}>
-          <MaterialCommunityIcons name={action.icon} size={28} color={action.color} />
+          <MaterialCommunityIcons name={action.icon as any} size={28} color={action.color} />
           <Text style={ui.title}>{action.label}</Text>
           <Text style={ui.muted}>{action.route === "/(driver)/appointments" && !confirmedBookings.length ? "Lịch sẽ hiển thị sau khi booking được duyệt" : action.subtitle}</Text>
         </TouchableOpacity>)}

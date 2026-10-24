@@ -62,6 +62,24 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       onDisconnected: () => { if (!disposed) setRealtimeConnected(false); },
       onConnectionError: () => { if (!disposed) setRealtimeConnected(false); },
       onBookingDispatchUpdated: () => { if (!disposed) void reload(); },
+      onTripAssigned: (data) => {
+        if (!disposed) {
+          setBanner({
+            id: `trip-assigned-${Date.now()}`,
+            bookingId: data?.tripId || '',
+            bookingCode: data?.tripCode || data?.orderCode || 'Lệnh mới',
+            kind: 'assigned',
+            title: 'Lệnh vận chuyển mới',
+            message: `Bạn vừa được giao chuyến xe ${data?.tripCode || ''}.`,
+            isRead: false,
+            createdAt: new Date().toISOString(),
+          });
+          void reload();
+        }
+      },
+      onTripStatusUpdated: () => {
+        if (!disposed) void reload();
+      },
     }).then(cleanup => { if (disposed) cleanup(); else unsubscribe = cleanup; })
       .catch(() => { if (!disposed) setRealtimeConnected(false); });
     void subscribeYardRealtime(() => { if (!disposed) void reload(); })
