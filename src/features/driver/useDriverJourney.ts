@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
-import type { SmartRoute, YardMap } from './services/smartRouteService';
+import type { SmartRoute, YardMap, ReferenceYardLayout } from './services/smartRouteService';
 import { loadJourneySnapshot } from './journeySnapshot';
 import { subscribeYardRealtime } from './services/realtimeService';
 
 export function useDriverJourney(bookingId?: string, containerId?: string) {
   const [snapshot, setSnapshot] = useState<{ key: string; route: SmartRoute | null; routes: SmartRoute[]; at: string } | null>(null);
   const [map, setMap] = useState<YardMap | null>(null);
+  const [referenceLayout, setReferenceLayout] = useState<ReferenceYardLayout | null>(null);
   const [mapWarning, setMapWarning] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -30,6 +31,7 @@ export function useDriverJourney(bookingId?: string, containerId?: string) {
       const result = await loadJourneySnapshot(bookingId, containerId);
       if (!mounted.current || current.current !== scope || revision !== mutation.current) return;
       if (result.map) setMap(result.map);
+      if (result.referenceLayout) setReferenceLayout(result.referenceLayout);
       setMapWarning(result.mapWarning);
       if (!result.error) setSnapshot({ key: scope, route: result.route, routes: result.routes, at: new Date().toISOString() });
       setError(result.error);
@@ -82,7 +84,7 @@ export function useDriverJourney(bookingId?: string, containerId?: string) {
     }
   };
 
-  return { route: snapshot?.key === scope ? snapshot.route : null, routes: snapshot?.key === scope ? snapshot.routes : [], map, mapWarning,
+  return { route: snapshot?.key === scope ? snapshot.route : null, routes: snapshot?.key === scope ? snapshot.routes : [], map, referenceLayout, mapWarning,
     updatedAt: snapshot?.key === scope ? snapshot.at : null, loading: snapshot?.key !== scope,
     refreshing, error, connected, reload, mutate };
 }

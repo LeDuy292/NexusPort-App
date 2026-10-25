@@ -8,7 +8,7 @@ export const JOURNEY_STAGES: { id: JourneyStage; title: string; icon: string; de
   { id: 'to_yard', title: 'Đến điểm nhận', icon: 'navigate-outline', description: 'Theo tuyến được phân công đến điểm giao nhận. Chỉ xác nhận đã đến khi xe ở đúng điểm.' },
   { id: 'handover', title: 'Giao / nhận hàng', icon: 'cube-outline', description: 'Chờ nhân viên bãi xử lý, kiểm tra số container, số chì và tình trạng trước khi xác nhận.' },
   { id: 'to_exit', title: 'Đến cổng ra', icon: 'return-up-forward-outline', description: 'Khi đủ container đã được xác nhận, di chuyển theo tuyến đến cổng ra. Tiếp tục dùng booking của chuyến này, không cần tạo booking mới.' },
-  { id: 'gate_out', title: 'Gate Out', icon: 'exit-outline', description: 'Camera cổng ra đối soát biển số với cùng booking, lượt vào và các container đã hoàn tất. Hệ thống ghi nhận xe rời cảng sau khi qua cổng.' },
+  { id: 'gate_out', title: 'Qua cổng ra', icon: 'exit-outline', description: 'Camera cổng ra đối soát biển số với cùng booking, lượt vào và các container đã hoàn tất. Hệ thống ghi nhận xe rời cảng sau khi qua cổng.' },
   { id: 'completed', title: 'Hoàn thành', icon: 'flag-outline', description: 'Đã ghi nhận xe rời cảng. Có thể xem lại các mốc và thông tin booking.' },
 ];
 
