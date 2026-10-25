@@ -1,10 +1,11 @@
-import { getDriverYardMap, listSmartRoutes, selectSmartRoute, type SmartRoute, type YardMap } from './services/smartRouteService';
+import { getDriverYardMap, listSmartRoutes, selectSmartRoute, type SmartRoute, type YardMap, type ReferenceYardLayout } from './services/smartRouteService';
 
 const message = (error: unknown, fallback: string) => error instanceof Error ? error.message : fallback;
 
 /** Map availability must not determine whether a driver can report readiness. */
 export async function loadJourneySnapshot(bookingId?: string, containerId?: string): Promise<{
   route: SmartRoute | null; routes: SmartRoute[]; map: YardMap | null;
+  referenceLayout: ReferenceYardLayout | null;
   error: string | null; mapWarning: string | null;
 }> {
   const [routeResult, mapResult] = await Promise.allSettled([listSmartRoutes(), getDriverYardMap()]);
@@ -15,6 +16,7 @@ export async function loadJourneySnapshot(bookingId?: string, containerId?: stri
   const map = route?.navigation?.map || (mapResult.status === 'fulfilled' ? mapResult.value.map : null);
   return {
     route, routes, map,
+    referenceLayout: map?.referenceLayout || (mapResult.status === 'fulfilled' ? mapResult.value.referenceLayout || null : null),
     error: routeResult.status === 'rejected' ? message(routeResult.reason, 'Không cập nhật được hành trình.') : null,
     mapWarning: map ? null : mapResult.status === 'rejected'
       ? message(mapResult.reason, 'Không tải được sơ đồ bãi.')

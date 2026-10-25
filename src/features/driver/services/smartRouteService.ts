@@ -10,11 +10,20 @@ export interface YardEdge {
   restricted?: boolean; bidirectional?: boolean; congestion?: number; instruction?: string;
 }
 export interface YardLayout {
+  drawingVersion?: string;
   blocks: Array<{ code: string; label: string; x: number; y: number; width: number; height: number; bays: number; rows: number; tiers: number }>;
   slots: Array<{ id: string; block: string; bay: number; row: number; tier: number; status: string }>;
 }
 export interface YardMap {
-  version: string; nodes: YardNode[]; edges: YardEdge[]; layout?: YardLayout;
+  version: string; nodes: YardNode[]; edges: YardEdge[]; layout?: YardLayout; referenceLayout?: ReferenceYardLayout;
+}
+export interface ReferenceYardLayout {
+  version: string; status: string; width: number; height: number;
+  zones: Array<{ code: string; label: string; maxContainerRows: number | null }>;
+  gates: Array<{ code: string; label: string; direction: string; x: number; y: number }>;
+  roads: Array<{ id: string; points: number[][]; direction: string }>;
+  facilities: Array<{ code: string; label: string; x: number; y: number; width: number; height: number }>;
+  areas: Array<{ code: string; zone: string; bay: number; rows: number[]; x: number; y: number; width: number; height: number; orientation: string; note: string; sourceHighlight: boolean }>;
 }
 export interface SmartRoute {
   containerId: string; containerNumber: string; bookingId: string; bookingCode?: string;
@@ -46,7 +55,7 @@ export function listSmartRoutes(): Promise<SmartRoute[]> {
   return request("/drivers/me/routes");
 }
 
-export function getDriverYardMap(): Promise<{ map: YardMap | null; errorCode?: string }> {
+export function getDriverYardMap(): Promise<{ map: YardMap | null; errorCode?: string; referenceLayout?: ReferenceYardLayout }> {
   return request('/drivers/me/yard-map');
 }
 

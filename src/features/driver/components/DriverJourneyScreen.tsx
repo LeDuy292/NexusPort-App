@@ -84,7 +84,7 @@ export default function DriverJourneyScreen() {
   const button = (label: string, onPress: () => void, disabled = false) => <TouchableOpacity accessibilityRole="button" disabled={disabled} onPress={onPress} style={[styles.primary, disabled && { opacity: .45 }]}>
     <Text style={styles.primaryText}>{acting ? 'Đang cập nhật…' : label}</Text>
   </TouchableOpacity>;
-  const map = <YardRouteMap route={route} map={journey.map} stage={current} stale={!!journey.error || !!feedError || !!journey.mapWarning} />;
+  const map = <YardRouteMap route={route} map={journey.map} referenceLayout={journey.referenceLayout} stage={current} stale={!!journey.error || !!feedError || !!journey.mapWarning} />;
 
   return <View style={ui.page}>
     <View style={styles.header}>
@@ -169,7 +169,7 @@ export default function DriverJourneyScreen() {
             {progress?.containerConfirmedAt && containers?.next && containers.next.id !== container?.id && button(`Tiếp tục ${containers.next.containerNo}`, () => setContainerId(containers.next!.id), !fresh)}
             {progress?.canConfirmContainer && button(`Kiểm tra & xác nhận ${bookingTypeLabel(booking.bookingType).toLowerCase()}`, () => { setCondition('OK'); setModal('confirm'); }, !fresh)}
           </>}
-          {isCurrent && selected === 'to_exit' && <View style={styles.note}><Text style={ui.text}>Đã hoàn tất giao nhận các container của booking. Theo tuyến trên bản đồ đến {progress?.exitGateCode || 'GATE-03'}.</Text><Text style={ui.text}>Dùng cùng booking {booking.bookingCode} tại cổng ra; không tạo booking mới. Chuyến chỉ hoàn thành khi hệ thống ghi nhận Gate Out.</Text></View>}
+          {isCurrent && selected === 'to_exit' && <View style={styles.note}><Text style={ui.text}>Đã hoàn tất giao nhận các container của booking. Theo tuyến trên bản đồ đến {progress?.exitGateCode || 'GATE-02'}.</Text><Text style={ui.text}>Dùng cùng booking {booking.bookingCode} tại cổng ra; không tạo booking mới. Chuyến chỉ hoàn thành khi hệ thống ghi nhận Gate Out.</Text></View>}
           {isCurrent && selected === 'gate_out' && <Text style={ui.text}>Đang ở mốc cổng ra. Chờ hệ thống kiểm tra và ghi nhận xe qua cổng. Hoàn thành sẽ tự cập nhật.</Text>}
           {selected === 'completed' && isCurrent && <Text style={{ color: '#1d6c56', lineHeight: 22 }}>Đã hoàn tất giao / nhận hàng và rời cảng. Chạm các chặng phía trên để xem lại.</Text>}
           {actionError && <Text accessibilityRole="alert" style={styles.error}>{actionError}</Text>}
