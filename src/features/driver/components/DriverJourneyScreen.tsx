@@ -84,7 +84,7 @@ export default function DriverJourneyScreen() {
   const button = (label: string, onPress: () => void, disabled = false) => <TouchableOpacity accessibilityRole="button" disabled={disabled} onPress={onPress} style={[styles.primary, disabled && { opacity: .45 }]}>
     <Text style={styles.primaryText}>{acting ? 'Đang cập nhật…' : label}</Text>
   </TouchableOpacity>;
-  const map = <YardRouteMap route={route} map={journey.map} referenceLayout={journey.referenceLayout} stage={current} stale={!!journey.error || !!feedError || !!journey.mapWarning} />;
+  const map = <YardRouteMap route={route} map={journey.map} stale={!!journey.error || !!feedError || !!journey.mapWarning} />;
 
   return <View style={ui.page}>
     <View style={styles.header}>
@@ -160,7 +160,7 @@ export default function DriverJourneyScreen() {
           </View>}
           {isCurrent && selected === 'to_yard' && <>
             <Text style={ui.text}>{target ? `Đang trên đường tới ${target}. Trạng thái này được giữ đến khi bạn xác nhận đã đến.` : route ? 'Đã vào bãi. Đang chờ điểm giao nhận được phân công.' : 'Đã ghi nhận vào cổng. Đang đồng bộ điểm giao nhận và lộ trình.'}</Text>
-            {route?.navigation?.status === 'available' && <Text style={ui.muted}>{Math.round(route.navigation.distanceMeters || 0)} m · khoảng {Math.max(1, Math.ceil((route.navigation.estimatedSeconds || 0) / 60))} phút</Text>}
+            {route?.navigation?.status === 'available' && route.navigation.distanceMeters!=null && route.navigation.estimatedSeconds!=null && <Text style={ui.muted}>{Math.round(route.navigation.distanceMeters || 0)} m · khoảng {Math.max(1, Math.ceil((route.navigation.estimatedSeconds || 0) / 60))} phút</Text>}
             {progress?.canArrive ? button('Tôi đã đến đúng điểm giao nhận', () => setModal('arrive'), !fresh) : <Text style={ui.muted}>Chờ tuyến và điểm giao nhận hợp lệ. Bạn chưa cần thực hiện thao tác khác.</Text>}
           </>}
           {isCurrent && selected === 'handover' && <>
