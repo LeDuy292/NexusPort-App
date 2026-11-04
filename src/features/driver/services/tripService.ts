@@ -1,41 +1,9 @@
 /**
  * Trip Service – kết nối API Transport Trip
- * Base URL: cấu hình qua AsyncStorage key "api_base_url"
- * Fallback:  http://localhost:3000
+ * Uses the shared HTTP client for API configuration, JWT and expired sessions.
  */
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const DEFAULT_BASE = "http://localhost:3001";
-
-async function getHeaders() {
-  const userRaw = await AsyncStorage.getItem("user");
-  const token = userRaw ? JSON.parse(userRaw).token : null;
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
-async function getBase(): Promise<string> {
-  const base = await AsyncStorage.getItem("api_base_url");
-  return (base || DEFAULT_BASE).replace(/\/$/, "");
-}
-
-async function apiFetch(path: string, options: RequestInit = {}) {
-  const [base, headers] = await Promise.all([getBase(), getHeaders()]);
-  const res = await fetch(`${base}${path}`, {
-    ...options,
-    headers: { ...headers, ...(options.headers as Record<string, string> || {}) },
-  });
-  const json = await res.json();
-  if (!res.ok) {
-    const err = new Error(json.message || `HTTP ${res.status}`);
-    (err as any).statusCode = res.status;
-    throw err;
-  }
-  return json;
-}
+import { apiRequest as apiFetch, ApiError } from "../../../lib/apiClient";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -164,7 +132,8 @@ export async function getTransportOrders(
   try {
     const res = await apiFetch(`/api/driver/transport-orders${query}`);
     return res.data;
-  } catch {
+  } catch (error) {
+    if (!(error instanceof ApiError) || ![404, 405].includes(error.statusCode)) throw error;
     return getMyTrips(params);
   }
 }
@@ -178,7 +147,8 @@ export async function getTransportOrderDetail(id: string): Promise<TripDetail> {
   try {
     const res = await apiFetch(`/api/driver/transport-orders/${id}`);
     return res.data.order || res.data.trip;
-  } catch {
+  } catch (error) {
+    if (!(error instanceof ApiError) || ![404, 405].includes(error.statusCode)) throw error;
     return getTripById(id);
   }
 }
