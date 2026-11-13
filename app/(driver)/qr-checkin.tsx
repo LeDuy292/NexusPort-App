@@ -40,9 +40,14 @@ export default function DriverCheckIn() {
                   paddingHorizontal: 14,
                   paddingVertical: 8,
                   borderRadius: 12,
-                  backgroundColor: b.id === currentBooking?.id ? "#1d6c56" : "#ffffff",
+                  backgroundColor: b.id === currentBooking?.id ? "#ff682c" : "#ffffff",
                   borderWidth: 1,
-                  borderColor: b.id === currentBooking?.id ? "#1d6c56" : "#e2e8f0",
+                  borderColor: b.id === currentBooking?.id ? "#ff682c" : "#e2e8f0",
+                  shadowColor: b.id === currentBooking?.id ? "#ff682c" : "#0f172a",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: b.id === currentBooking?.id ? 0.25 : 0.03,
+                  shadowRadius: 4,
+                  elevation: b.id === currentBooking?.id ? 3 : 1,
                 }}
               >
                 <Text style={{ color: b.id === currentBooking?.id ? "#ffffff" : "#475569", fontWeight: "700", fontSize: 12 }}>
@@ -84,45 +89,46 @@ export default function DriverCheckIn() {
               }}
             >
               {/* Header của thẻ */}
-              <View style={{ backgroundColor: "#1d6c56", padding: 18, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <View style={{ backgroundColor: "#0f172a", padding: 18, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}>
+                  <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: "#ff682c", alignItems: "center", justifyContent: "center" }}>
                     <MaterialCommunityIcons name="boom-gate-up" size={22} color="#ffffff" />
                   </View>
                   <View>
-                    <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 10, fontWeight: "800", letterSpacing: 1.2 }}>SMART GATE PASS</Text>
+                    <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 10, fontWeight: "800", letterSpacing: 1.2 }}>SMART GATE PASS</Text>
                     <Text style={{ color: "#ffffff", fontSize: 16, fontWeight: "800" }}>CẢNG TIÊN SA · CỔNG 01</Text>
                   </View>
                 </View>
-                <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: "#4ade80" }}>
-                  <Text style={{ color: "#064e3b", fontWeight: "800", fontSize: 11 }}>HỢP LỆ</Text>
+                <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: "#16a34a" }}>
+                  <Text style={{ color: "#ffffff", fontWeight: "800", fontSize: 11 }}>HỢP LỆ</Text>
                 </View>
               </View>
 
               {/* Thân thẻ - Mã QR */}
-              <View style={{ alignItems: "center", paddingVertical: 24, paddingHorizontal: 20, backgroundColor: "#fafbfc" }}>
+              <View style={{ alignItems: "center", paddingVertical: 24, paddingHorizontal: 20, backgroundColor: "#f8fafc" }}>
                 {/* Visual QR Code Display */}
                 <View
                   style={{
                     width: 200,
                     height: 200,
                     backgroundColor: "#ffffff",
-                    borderRadius: 18,
+                    borderRadius: 20,
                     padding: 14,
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 2,
-                    borderColor: "#1d6c56",
-                    shadowColor: "#000",
-                    shadowOpacity: 0.08,
-                    shadowRadius: 8,
-                    elevation: 3,
+                    borderColor: "#ff682c",
+                    shadowColor: "#0f172a",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 10,
+                    elevation: 4,
                   }}
                 >
                   {/* Decorative QR Pattern Simulation */}
                   <View style={{ width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}>
-                    <MaterialCommunityIcons name="qrcode-scan" size={120} color="#172b3a" />
-                    <Text style={{ fontSize: 10, fontWeight: "800", color: "#1d6c56", marginTop: 4, letterSpacing: 1 }}>
+                    <MaterialCommunityIcons name="qrcode-scan" size={120} color="#0f172a" />
+                    <Text style={{ fontSize: 10, fontWeight: "800", color: "#ff682c", marginTop: 4, letterSpacing: 1 }}>
                       {currentBooking.bookingCode}
                     </Text>
                   </View>
@@ -132,7 +138,7 @@ export default function DriverCheckIn() {
                 <View style={{ marginTop: 16, alignItems: "center", gap: 4 }}>
                   <View style={{ flexDirection: "row", gap: 3, height: 26, alignItems: "center" }}>
                     {[3, 1, 4, 2, 5, 1, 3, 2, 4, 1, 5, 2, 3, 1, 4, 2, 3, 1, 4].map((w, idx) => (
-                      <View key={idx} style={{ width: w, height: 24, backgroundColor: idx % 2 === 0 ? "#172b3a" : "#64748b" }} />
+                      <View key={idx} style={{ width: w, height: 24, backgroundColor: idx % 2 === 0 ? "#0f172a" : "#94a3b8" }} />
                     ))}
                   </View>
                   <Text style={{ color: "#64748b", fontSize: 11, fontWeight: "700", letterSpacing: 2 }}>
@@ -143,9 +149,9 @@ export default function DriverCheckIn() {
 
               {/* Răng cưa phân cách vé */}
               <View style={{ flexDirection: "row", alignItems: "center", height: 16, backgroundColor: "#ffffff" }}>
-                <View style={{ width: 14, height: 28, borderRadius: 14, backgroundColor: "#f4f6f8", marginLeft: -7 }} />
+                <View style={{ width: 14, height: 28, borderRadius: 14, backgroundColor: "#f8fafc", marginLeft: -7 }} />
                 <View style={{ flex: 1, borderBottomWidth: 1.5, borderColor: "#cbd5e1", borderStyle: "dashed" }} />
-                <View style={{ width: 14, height: 28, borderRadius: 14, backgroundColor: "#f4f6f8", marginRight: -7 }} />
+                <View style={{ width: 14, height: 28, borderRadius: 14, backgroundColor: "#f8fafc", marginRight: -7 }} />
               </View>
 
               {/* Thông tin chuyến & xe */}
@@ -153,13 +159,13 @@ export default function DriverCheckIn() {
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                   <View>
                     <Text style={{ color: "#64748b", fontSize: 11, fontWeight: "600" }}>BIỂN SỐ XE ĐĂNG KÝ</Text>
-                    <Text style={{ color: "#172b3a", fontSize: 17, fontWeight: "800", marginTop: 2 }}>
+                    <Text style={{ color: "#0f172a", fontSize: 17, fontWeight: "800", marginTop: 2 }}>
                       {currentBooking.truckPlate || "Chưa gán xe"}
                     </Text>
                   </View>
                   <View style={{ alignItems: "flex-end" }}>
                     <Text style={{ color: "#64748b", fontSize: 11, fontWeight: "600" }}>LOẠI TÁC NGHIỆP</Text>
-                    <Text style={{ color: "#c45b22", fontSize: 15, fontWeight: "700", marginTop: 2 }}>
+                    <Text style={{ color: "#ff682c", fontSize: 15, fontWeight: "800", marginTop: 2 }}>
                       {bookingTypeLabel(currentBooking.bookingType)}
                     </Text>
                   </View>
@@ -170,14 +176,14 @@ export default function DriverCheckIn() {
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                   <View>
                     <Text style={{ color: "#64748b", fontSize: 11, fontWeight: "600" }}>TÀI XẾ</Text>
-                    <Text style={{ color: "#172b3a", fontSize: 14, fontWeight: "700", marginTop: 2 }}>
+                    <Text style={{ color: "#0f172a", fontSize: 14, fontWeight: "700", marginTop: 2 }}>
                       {currentBooking.driverName || user?.fullName || user?.username}
                     </Text>
                     <Text style={{ color: "#64748b", fontSize: 11, marginTop: 1 }}>{currentBooking.carrierName}</Text>
                   </View>
                   <View style={{ alignItems: "flex-end" }}>
                     <Text style={{ color: "#64748b", fontSize: 11, fontWeight: "600" }}>CONTAINER ({currentBooking.containers.length})</Text>
-                    <Text style={{ color: "#172b3a", fontSize: 14, fontWeight: "700", marginTop: 2 }}>
+                    <Text style={{ color: "#0f172a", fontSize: 14, fontWeight: "700", marginTop: 2 }}>
                       {currentBooking.containers[0]?.containerNo || "Chưa có"}
                     </Text>
                     {currentBooking.containers.length > 1 && (
@@ -190,9 +196,9 @@ export default function DriverCheckIn() {
 
                 <View style={{ height: 1, backgroundColor: "#f1f5f9" }} />
 
-                <View style={{ backgroundColor: "#f8fafc", borderRadius: 12, padding: 12, gap: 4 }}>
-                  <Text style={{ color: "#64748b", fontSize: 11, fontWeight: "600" }}>KHUNG GIỜ QUA CỔNG HỢP LỆ</Text>
-                  <Text style={{ color: "#0369a1", fontSize: 13, fontWeight: "700" }}>
+                <View style={{ backgroundColor: "#f0f9ff", borderRadius: 12, padding: 12, gap: 4, borderWidth: 1, borderColor: "#bae6fd" }}>
+                  <Text style={{ color: "#0369a1", fontSize: 11, fontWeight: "700" }}>KHUNG GIỜ QUA CỔNG HỢP LỆ</Text>
+                  <Text style={{ color: "#0c4a6e", fontSize: 13, fontWeight: "700" }}>
                     {bookingTime(currentBooking.appointmentStart)} → {bookingTime(currentBooking.appointmentEnd)}
                   </Text>
                   {currentBooking.gateEntryOrder?.validUntil && (
@@ -207,8 +213,8 @@ export default function DriverCheckIn() {
             {/* HƯỚNG DẪN TẠI CỔNG */}
             <View style={[ui.card, { backgroundColor: "#f0fdf4", borderColor: "#86efac", gap: 8 }]}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Ionicons name="information-circle" size={20} color="#15803d" />
-                <Text style={{ color: "#15803d", fontSize: 14, fontWeight: "700" }}>Hướng dẫn vào cổng</Text>
+                <Ionicons name="information-circle" size={20} color="#16a34a" />
+                <Text style={{ color: "#16a34a", fontSize: 14, fontWeight: "700" }}>Hướng dẫn vào cổng</Text>
               </View>
               <Text style={{ color: "#166534", fontSize: 13, lineHeight: 20 }}>
                 1. Dừng xe trước vạch camera nhận diện tại Làn 1 hoặc Làn 2 Cổng Tiên Sa.{"\n"}
@@ -221,33 +227,17 @@ export default function DriverCheckIn() {
             <View style={{ gap: 10 }}>
               <TouchableOpacity
                 onPress={() => router.push({ pathname: "/(driver)/yard-navigation", params: { bookingId: currentBooking.id } } as any)}
-                style={{
-                  backgroundColor: "#1d6c56",
-                  borderRadius: 14,
-                  paddingVertical: 16,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexDirection: "row",
-                  gap: 8,
-                }}
+                style={ui.btnPrimary}
               >
                 <MaterialCommunityIcons name="map-marker-path" size={20} color="#ffffff" />
-                <Text style={{ color: "#ffffff", fontWeight: "700", fontSize: 15 }}>Mở dẫn đường Smart Route bãi</Text>
+                <Text style={ui.btnPrimaryText}>Mở dẫn đường Smart Route bãi</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => router.push({ pathname: "/(driver)/booking-detail", params: { id: currentBooking.id } } as any)}
-                style={{
-                  backgroundColor: "#ffffff",
-                  borderWidth: 1,
-                  borderColor: "#cbd5e1",
-                  borderRadius: 14,
-                  paddingVertical: 14,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+                style={ui.btnSecondary}
               >
-                <Text style={{ color: "#334155", fontWeight: "600", fontSize: 14 }}>Xem hồ sơ booking chi tiết</Text>
+                <Text style={ui.btnSecondaryText}>Xem hồ sơ booking chi tiết</Text>
               </TouchableOpacity>
             </View>
           </View>

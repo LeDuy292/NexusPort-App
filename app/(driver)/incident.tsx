@@ -241,9 +241,9 @@ export default function DriverIncident() {
             </Text>
             <TouchableOpacity
               onPress={handleFinish}
-              style={{ width: "100%", paddingVertical: 14, borderRadius: 12, backgroundColor: "#1d6c56", alignItems: "center", marginTop: 6 }}
+              style={{ width: "100%", paddingVertical: 14, borderRadius: 14, backgroundColor: "#ff682c", alignItems: "center", marginTop: 6, shadowColor: "#ff682c", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 }}
             >
-              <Text style={{ color: "#ffffff", fontWeight: "700", fontSize: 14 }}>Hoàn tất</Text>
+              <Text style={{ color: "#ffffff", fontWeight: "800", fontSize: 14 }}>Hoàn tất</Text>
             </TouchableOpacity>
           </View>
         </View>

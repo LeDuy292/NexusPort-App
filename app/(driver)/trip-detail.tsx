@@ -167,39 +167,84 @@ export default function TripDetailScreen() {
   const waitingForGate = ["Container Picked Up", "Container Delivered", "Gate In", "In Transit", "Arrived at Yard"].includes(trip.status);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f4f6f8" }}>
+    <View style={{ flex: 1, backgroundColor: "#f8fafc" }}>
       {/* Header */}
-      <LinearGradient
-        colors={[`${cfg.color}20`, "transparent"]}
-        style={{ paddingTop: 56, paddingBottom: 16, paddingHorizontal: 20 }}
+      <View
+        style={{
+          paddingTop: 54,
+          paddingBottom: 16,
+          paddingHorizontal: 20,
+          backgroundColor: "#ffffff",
+          borderBottomWidth: 1,
+          borderBottomColor: "#f1f5f9",
+        }}
       >
-        {waitingForGate && <View style={[cardStyle, { borderColor: "#f6ad5560" }]}>
-          <Text style={{ color: "#a16207", fontWeight: "700" }}>Theo dõi giao nhận và qua cổng trên Smart Route</Text>
-          <Text style={{ color: "#475569", fontSize: 13, lineHeight: 20, marginTop: 6 }}>Mở Smart Route trong booking để xác nhận đã đến và nhận đúng container. Nhân viên cổng xác nhận Gate In / Gate Out khi xe đi qua.</Text>
-        </View>}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 }}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={{ width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "#e8edf2" }}
+        {waitingForGate && (
+          <View
+            style={{
+              padding: 14,
+              borderRadius: 14,
+              backgroundColor: "#fffbeb",
+              borderWidth: 1,
+              borderColor: "#fde68a",
+              marginBottom: 12,
+              gap: 4,
+            }}
           >
-            <Ionicons name="arrow-back" size={18} color="#172b3a" />
-          </TouchableOpacity>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: "#172b3a", fontSize: 18, fontWeight: "bold" }}>
-              Chi tiết chuyến
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Ionicons name="compass-outline" size={16} color="#d97706" />
+              <Text style={{ color: "#92400e", fontWeight: "700", fontSize: 13 }}>
+                Theo dõi giao nhận & qua cổng trên Smart Route
+              </Text>
+            </View>
+            <Text style={{ color: "#78350f", fontSize: 12, lineHeight: 18 }}>
+              Mở Smart Route trong booking để xác nhận đã đến và nhận container. Cổng xác nhận Gate In / Gate Out tự động khi xe đi qua.
             </Text>
-            <Text style={{ color: "#64748b", fontSize: 12 }}>{trip.tripCode}</Text>
+          </View>
+        )}
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#f8fafc",
+                borderWidth: 1,
+                borderColor: "#e2e8f0",
+              }}
+            >
+              <Ionicons name="arrow-back" size={20} color="#0f172a" />
+            </TouchableOpacity>
+            <View>
+              <Text style={{ color: "#0f172a", fontSize: 18, fontWeight: "800", letterSpacing: -0.3 }}>
+                Chi tiết chuyến
+              </Text>
+              <Text style={{ color: "#64748b", fontSize: 12, marginTop: 1, fontWeight: "500" }}>{trip.tripCode}</Text>
+            </View>
           </View>
           {/* Status badge */}
-          <View style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, backgroundColor: `${cfg.color}20`, borderWidth: 1, borderColor: `${cfg.color}40` }}>
+          <View
+            style={{
+              paddingHorizontal: 12,
+              paddingVertical: 5,
+              borderRadius: 20,
+              backgroundColor: `${cfg.color}15`,
+              borderWidth: 1,
+              borderColor: `${cfg.color}35`,
+            }}
+          >
             <Text style={{ color: cfg.color, fontWeight: "700", fontSize: 12 }}>{cfg.label}</Text>
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 100 }}
+        contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Container & Trip Info */}
@@ -272,8 +317,8 @@ export default function TripDetailScreen() {
 
         {/* Timeline */}
         <View style={cardStyle}>
-          <SectionTitle icon="timeline-clock" label="Tiến trình hành trình" color="#a16207" />
-          <View style={{ marginTop: 8, gap: 0 }}>
+          <SectionTitle icon="timeline-clock" label="Tiến trình thực hiện" color="#d97706" />
+          <View style={{ marginTop: 10, gap: 0 }}>
             {TIMELINE_STEPS.map((step, idx) => {
               const stepOrder = STATUS_ORDER[step.status] ?? 99;
               const done = currentOrder >= stepOrder;
@@ -287,30 +332,30 @@ export default function TripDetailScreen() {
                   <View style={{ width: 28, alignItems: "center" }}>
                     <View
                       style={{
-                        width: done ? 20 : 16,
-                        height: done ? 20 : 16,
-                        borderRadius: 10,
-                        backgroundColor: done ? "#15803d" : "#e8edf2",
-                        borderWidth: active ? 2 : 0,
-                        borderColor: "#ff682c",
+                        width: done ? 22 : 18,
+                        height: done ? 22 : 18,
+                        borderRadius: 11,
+                        backgroundColor: done ? "#16a34a" : "#f1f5f9",
+                        borderWidth: active ? 2 : 1,
+                        borderColor: active ? "#ff682c" : done ? "#16a34a" : "#cbd5e1",
                         alignItems: "center",
                         justifyContent: "center",
                       }}
                     >
-                      {done && <Ionicons name="checkmark" size={11} color="#172b3a" />}
+                      {done && <Ionicons name="checkmark" size={12} color="#ffffff" />}
                     </View>
                     {!isLast && (
-                      <View style={{ width: 2, height: 28, backgroundColor: done ? "rgba(72,187,120,0.3)" : "#e8edf2", marginTop: 2 }} />
+                      <View style={{ width: 2, height: 30, backgroundColor: done ? "#86efac" : "#e2e8f0", marginTop: 2 }} />
                     )}
                   </View>
 
                   {/* Content */}
-                  <View style={{ flex: 1, marginLeft: 10, paddingBottom: isLast ? 0 : 24 }}>
-                    <Text style={{ color: done ? "white" : "#64748b", fontWeight: done ? "600" : "400", fontSize: 13 }}>
+                  <View style={{ flex: 1, marginLeft: 12, paddingBottom: isLast ? 0 : 22 }}>
+                    <Text style={{ color: done ? "#0f172a" : "#64748b", fontWeight: done ? "700" : "500", fontSize: 13 }}>
                       {step.label}
                     </Text>
                     {time ? (
-                      <Text style={{ color: "rgba(72,187,120,0.8)", fontSize: 11, marginTop: 2 }}>
+                      <Text style={{ color: "#16a34a", fontSize: 11, fontWeight: "600", marginTop: 2 }}>
                         {formatDateTime(time)}
                       </Text>
                     ) : null}
@@ -325,14 +370,14 @@ export default function TripDetailScreen() {
         {trip.history && trip.history.length > 0 && (
           <View style={cardStyle}>
             <SectionTitle icon="history" label="Lịch sử trạng thái" color="#64748b" />
-            <View style={{ gap: 8, marginTop: 6 }}>
+            <View style={{ gap: 8, marginTop: 8 }}>
               {[...trip.history].reverse().map((h) => (
                 <View key={h.id} style={{ flexDirection: "row", gap: 8 }}>
                   <Text style={{ color: "#64748b", fontSize: 11, width: 80, flexShrink: 0 }}>
                     {formatDateTime(h.changedAt)}
                   </Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: "#64748b", fontSize: 12 }}>
+                    <Text style={{ color: "#0f172a", fontSize: 12 }}>
                       {h.fromStatus ? `${h.fromStatus} → ` : ""}<Text style={{ fontWeight: "700" }}>{h.toStatus}</Text>
                     </Text>
                     {h.note ? (
@@ -348,7 +393,7 @@ export default function TripDetailScreen() {
         {trip.note && (
           <View style={cardStyle}>
             <SectionTitle icon="note-outline" label="Ghi chú" color="#64748b" />
-            <Text style={{ color: "#64748b", fontSize: 13, marginTop: 6, lineHeight: 20 }}>{trip.note}</Text>
+            <Text style={{ color: "#334155", fontSize: 13, marginTop: 6, lineHeight: 20 }}>{trip.note}</Text>
           </View>
         )}
       </ScrollView>
@@ -362,10 +407,15 @@ export default function TripDetailScreen() {
             left: 0,
             right: 0,
             padding: 16,
-            paddingBottom: 32,
-            backgroundColor: "#f4f6f8",
+            paddingBottom: Math.max(Platform.OS === "ios" ? 34 : 16, 16),
+            backgroundColor: "#ffffff",
             borderTopWidth: 1,
-            borderTopColor: "#e8edf2",
+            borderTopColor: "#e2e8f0",
+            shadowColor: "#0f172a",
+            shadowOffset: { width: 0, height: -3 },
+            shadowOpacity: 0.06,
+            shadowRadius: 10,
+            elevation: 8,
           }}
         >
           <TouchableOpacity
@@ -376,17 +426,22 @@ export default function TripDetailScreen() {
               alignItems: "center",
               justifyContent: "center",
               gap: 10,
-              paddingVertical: 16,
+              paddingVertical: 15,
               borderRadius: 16,
-              backgroundColor: actionLoading ? "#e8edf2" : currentAction.color,
+              backgroundColor: actionLoading ? "#cbd5e1" : currentAction.color || "#ff682c",
+              shadowColor: currentAction.color || "#ff682c",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 8,
+              elevation: 4,
             }}
           >
             {actionLoading ? (
-              <ActivityIndicator size="small" color="#172b3a" />
+              <ActivityIndicator size="small" color="#ffffff" />
             ) : (
               <>
-                <MaterialCommunityIcons name={currentAction.icon as any} size={20} color="#172b3a" />
-                <Text style={{ color: "#172b3a", fontWeight: "700", fontSize: 15 }}>
+                <MaterialCommunityIcons name={currentAction.icon as any} size={20} color="#ffffff" />
+                <Text style={{ color: "#ffffff", fontWeight: "800", fontSize: 15 }}>
                   {currentAction.label}
                 </Text>
               </>
@@ -413,12 +468,12 @@ export default function TripDetailScreen() {
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
                 padding: 24,
-                gap: 14,
+                gap: 16,
                 borderTopWidth: 1,
-                borderColor: "#e8edf2",
+                borderColor: "#e2e8f0",
               }}
             >
-              <Text style={{ color: "#172b3a", fontSize: 17, fontWeight: "bold" }}>
+              <Text style={{ color: "#0f172a", fontSize: 18, fontWeight: "800" }}>
                 Xác nhận giao container
               </Text>
               <Text style={{ color: "#64748b", fontSize: 13 }}>
@@ -450,12 +505,12 @@ export default function TripDetailScreen() {
                 onChangeText={(v) => setDeliveryData((d) => ({ ...d, note: v }))}
               />
 
-              <View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
+              <View style={{ flexDirection: "row", gap: 12, marginTop: 6 }}>
                 <TouchableOpacity
                   onPress={() => { setShowDeliveryForm(false); setDeliveryData({}); }}
-                  style={{ flex: 1, paddingVertical: 14, borderRadius: 14, alignItems: "center", backgroundColor: "#e8edf2" }}
+                  style={{ flex: 1, paddingVertical: 14, borderRadius: 14, alignItems: "center", backgroundColor: "#f1f5f9", borderWidth: 1, borderColor: "#e2e8f0" }}
                 >
-                  <Text style={{ color: "#64748b", fontWeight: "600" }}>Hủy</Text>
+                  <Text style={{ color: "#475569", fontWeight: "700" }}>Hủy</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
@@ -463,14 +518,14 @@ export default function TripDetailScreen() {
                     executeAction(action, deliveryData);
                   }}
                   disabled={actionLoading}
-                  style={{ flex: 2, paddingVertical: 14, borderRadius: 14, alignItems: "center", backgroundColor: "#15803d", flexDirection: "row", justifyContent: "center", gap: 8 }}
+                  style={{ flex: 2, paddingVertical: 14, borderRadius: 14, alignItems: "center", backgroundColor: "#16a34a", flexDirection: "row", justifyContent: "center", gap: 8 }}
                 >
                   {actionLoading ? (
-                    <ActivityIndicator size="small" color="#172b3a" />
+                    <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
                     <>
-                      <Ionicons name="checkmark-circle" size={18} color="#172b3a" />
-                      <Text style={{ color: "#172b3a", fontWeight: "700", fontSize: 15 }}>Xác nhận giao</Text>
+                      <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
+                      <Text style={{ color: "#ffffff", fontWeight: "800", fontSize: 15 }}>Xác nhận giao</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -486,18 +541,25 @@ export default function TripDetailScreen() {
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 const cardStyle = {
-  borderRadius: 18,
-  padding: 16,
-  backgroundColor: "#e8edf2" as const,
+  borderRadius: 20,
+  padding: 18,
+  backgroundColor: "#ffffff" as const,
   borderWidth: 1,
-  borderColor: "#e8edf2" as const,
+  borderColor: "#e2e8f0" as const,
+  shadowColor: "#0f172a",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.04,
+  shadowRadius: 8,
+  elevation: 2,
 };
 
 function SectionTitle({ icon, label, color }: { icon: string; label: string; color: string }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 }}>
-      <MaterialCommunityIcons name={icon as any} size={16} color={color} />
-      <Text style={{ color: "#64748b", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
+      <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: `${color}15`, alignItems: "center", justifyContent: "center" }}>
+        <MaterialCommunityIcons name={icon as any} size={16} color={color} />
+      </View>
+      <Text style={{ color: "#0f172a", fontSize: 13, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 }}>
         {label}
       </Text>
     </View>
@@ -507,9 +569,9 @@ function SectionTitle({ icon, label, color }: { icon: string; label: string; col
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
   return (
-    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: "#f8fafc" }}>
       <Text style={{ color: "#64748b", fontSize: 13, flex: 1 }}>{label}</Text>
-      <Text style={{ color: "#64748b", fontSize: 13, fontWeight: "500", flex: 2, textAlign: "right" }}>
+      <Text style={{ color: "#0f172a", fontSize: 13, fontWeight: "700", flex: 2, textAlign: "right" }}>
         {value}
       </Text>
     </View>
@@ -523,21 +585,21 @@ function DeliveryInput({ label, placeholder, value, onChangeText }: {
   onChangeText: (v: string) => void;
 }) {
   return (
-    <View style={{ gap: 5 }}>
-      <Text style={{ color: "#64748b", fontSize: 12 }}>{label}</Text>
+    <View style={{ gap: 6 }}>
+      <Text style={{ color: "#334155", fontSize: 12, fontWeight: "700" }}>{label}</Text>
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#64748b"
+        placeholderTextColor="#94a3b8"
         style={{
-          backgroundColor: "#e8edf2",
+          backgroundColor: "#f8fafc",
           borderRadius: 12,
           padding: 12,
-          color: "#172b3a",
+          color: "#0f172a",
           fontSize: 14,
           borderWidth: 1,
-          borderColor: "#e8edf2",
+          borderColor: "#cbd5e1",
         }}
       />
     </View>
