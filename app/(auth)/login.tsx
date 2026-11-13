@@ -19,9 +19,10 @@ const DEFAULT_BASE = Platform.OS === "android" ? "http://10.0.2.2:3001" : "http:
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
-  const [username, setUsername] = useState("tiendriver");
-  const [password, setPassword] = useState("NexusPort@2026");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -33,6 +34,13 @@ export default function LoginScreen() {
   const [serverStatusMsg, setServerStatusMsg] = useState("");
 
   useEffect(() => {
+    AsyncStorage.getItem("remember_driver_me").then((rem) => {
+      if (rem === "true") {
+        setRememberMe(true);
+        AsyncStorage.getItem("saved_driver_user").then((u) => { if (u) setUsername(u); });
+        AsyncStorage.getItem("saved_driver_pass").then((p) => { if (p) setPassword(p); });
+      }
+    });
     AsyncStorage.getItem("api_base_url").then((saved) => {
       if (saved) {
         setApiBaseUrl(saved);
@@ -84,6 +92,15 @@ export default function LoginScreen() {
 
     try {
       await signIn(finalUser, finalPass, "Driver");
+      if (rememberMe) {
+        await AsyncStorage.setItem("remember_driver_me", "true");
+        await AsyncStorage.setItem("saved_driver_user", finalUser);
+        await AsyncStorage.setItem("saved_driver_pass", finalPass);
+      } else {
+        await AsyncStorage.removeItem("remember_driver_me");
+        await AsyncStorage.removeItem("saved_driver_user");
+        await AsyncStorage.removeItem("saved_driver_pass");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.");
     } finally {
@@ -246,6 +263,31 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Remember login checkbox */}
+          <TouchableOpacity
+            onPress={() => setRememberMe(!rememberMe)}
+            activeOpacity={0.7}
+            style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}
+          >
+            <View
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: 4,
+                borderWidth: 1.5,
+                borderColor: rememberMe ? "#ff682c" : "rgba(255,255,255,0.25)",
+                backgroundColor: rememberMe ? "#ff682c" : "transparent",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {rememberMe && <Ionicons name="checkmark" size={13} color="white" />}
+            </View>
+            <Text style={{ color: rememberMe ? "white" : "rgba(255,255,255,0.6)", fontSize: 13, fontWeight: "600" }}>
+              Ghi nhớ đăng nhập
+            </Text>
+          </TouchableOpacity>
 
           {/* Error message */}
           {error ? (
