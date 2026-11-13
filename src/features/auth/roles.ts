@@ -2,7 +2,6 @@ export const ROLE_ROUTES = {
   Driver: "/(driver)",
   "Gate Officer": "/(driver)",
   "Yard Operator": "/(driver)",
-  "Berth Staff": "/(driver)",
 } as const;
 
 export type AppRole = keyof typeof ROLE_ROUTES;

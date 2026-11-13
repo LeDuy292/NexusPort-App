@@ -4,7 +4,7 @@ const vm = require("node:vm");
 const ts = require("typescript");
 
 // Isolate each test's modules/storage/fetch while running the actual service code.
-function createHarness(fetchHandler) {
+function createHarness(fetchHandler, options = {}) {
   const values = new Map();
   const requests = [];
   const cache = new Map();
@@ -14,8 +14,8 @@ function createHarness(fetchHandler) {
     removeItem: async (key) => { values.delete(key); },
   };
   const context = vm.createContext({
-    Error, Headers, URLSearchParams, AbortController, setTimeout, clearTimeout,
-    process: { env: {} },
+    Error, Headers, URL, URLSearchParams, AbortController, setTimeout, clearTimeout,
+    process: { env: options.env || {} },
     fetch: async (url, options) => {
       requests.push({ url, options });
       return fetchHandler(url, options);
@@ -34,6 +34,8 @@ function createHarness(fetchHandler) {
     });
     const localRequire = (specifier) => {
       if (specifier === "@react-native-async-storage/async-storage") return storage;
+      if (specifier === "expo-constants") return { expoConfig: { hostUri: options.hostUri } };
+      if (specifier === "react-native") return { Platform: { OS: options.platform || "web" } };
       if (specifier.startsWith(".")) return load(path.relative(root, path.resolve(path.dirname(filename), specifier + ".ts")));
       throw new Error(`Unexpected dependency: ${specifier}`);
     };
