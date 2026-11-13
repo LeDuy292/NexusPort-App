@@ -3,6 +3,9 @@ import type { AuthSession, AuthUser } from "./types";
 
 // Keep the existing key to migrate old demo sessions and share the token with Socket.IO.
 const SESSION_KEY = "user";
+async function clearLegacyCredentials() {
+  await Promise.all(["remember_driver_me", "saved_driver_user", "saved_driver_pass"].map(key => AsyncStorage.removeItem(key)));
+}
 
 export function isAuthUser(value: unknown): value is AuthUser {
   if (!value || typeof value !== "object") return false;
@@ -13,11 +16,13 @@ export function isAuthUser(value: unknown): value is AuthUser {
 }
 
 export async function clearSession() {
+  await clearLegacyCredentials();
   await AsyncStorage.removeItem(SESSION_KEY);
   await AsyncStorage.removeItem("token");
 }
 
 export async function readSession(): Promise<AuthSession | null> {
+  await clearLegacyCredentials();
   const raw = await AsyncStorage.getItem(SESSION_KEY);
   if (!raw) return null;
   try {

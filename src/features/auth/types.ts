@@ -5,6 +5,7 @@ export interface AuthUser {
   fullName: string | null;
   role: string;
   isActive: boolean;
+  emailVerified?: boolean;
 }
 
 export interface AuthSession {

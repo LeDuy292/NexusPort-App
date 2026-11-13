@@ -7,81 +7,28 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Modal,
 } from "react-native";
-import { useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState } from "react";
 import { useAuth } from "../../src/features/auth/AuthProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-
-const DEFAULT_BASE = Platform.OS === "android" ? "http://10.0.2.2:3001" : "http://localhost:3001";
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Cấu hình URL máy chủ backend
-  const [apiBaseUrl, setApiBaseUrl] = useState(DEFAULT_BASE);
-  const [showServerModal, setShowServerModal] = useState(false);
-  const [tempBaseUrl, setTempBaseUrl] = useState(DEFAULT_BASE);
-  const [serverTesting, setServerTesting] = useState(false);
-  const [serverStatusMsg, setServerStatusMsg] = useState("");
-
-  useEffect(() => {
-    AsyncStorage.getItem("remember_driver_me").then((rem) => {
-      if (rem === "true") {
-        setRememberMe(true);
-        AsyncStorage.getItem("saved_driver_user").then((u) => { if (u) setUsername(u); });
-        AsyncStorage.getItem("saved_driver_pass").then((p) => { if (p) setPassword(p); });
-      }
-    });
-    AsyncStorage.getItem("api_base_url").then((saved) => {
-      if (saved) {
-        setApiBaseUrl(saved);
-        setTempBaseUrl(saved);
-      }
-    });
-  }, []);
-
-  const testServerConnection = async () => {
-    setServerTesting(true);
-    setServerStatusMsg("");
-    try {
-      const url = tempBaseUrl.replace(/\/$/, "");
-      const res = await fetch(`${url}/api/health`, { method: "GET" });
-      if (res.ok) {
-        setServerStatusMsg("✅ Kết nối máy chủ thành công!");
-      } else {
-        setServerStatusMsg(`⚠️ Máy chủ phản hồi mã lỗi HTTP ${res.status}`);
-      }
-    } catch (err: any) {
-      setServerStatusMsg("❌ Không thể kết nối đến máy chủ: " + (err.message || "Network request failed"));
-    } finally {
-      setServerTesting(false);
-    }
-  };
-
-  const saveServerUrl = async () => {
-    const cleanUrl = tempBaseUrl.trim().replace(/\/$/, "");
-    setApiBaseUrl(cleanUrl);
-    await AsyncStorage.setItem("api_base_url", cleanUrl);
-    setShowServerModal(false);
-  };
 
   /**
    * Đăng nhập thật kết nối trực tiếp đến Backend API
    * Mặc định vai trò Driver (ứng dụng chuyên biệt cho Tài xế)
    */
-  const handleLogin = async (userToSubmit?: string, passToSubmit?: string) => {
+  const handleLogin = async () => {
     if (loading) return;
-    const finalUser = (userToSubmit || username).trim();
-    const finalPass = (passToSubmit || password).trim();
+    const finalUser = username.trim();
+    const finalPass = password;
 
     if (!finalUser || !finalPass) {
       setError("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.");
@@ -92,15 +39,6 @@ export default function LoginScreen() {
 
     try {
       await signIn(finalUser, finalPass, "Driver");
-      if (rememberMe) {
-        await AsyncStorage.setItem("remember_driver_me", "true");
-        await AsyncStorage.setItem("saved_driver_user", finalUser);
-        await AsyncStorage.setItem("saved_driver_pass", finalPass);
-      } else {
-        await AsyncStorage.removeItem("remember_driver_me");
-        await AsyncStorage.removeItem("saved_driver_user");
-        await AsyncStorage.removeItem("saved_driver_pass");
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.");
     } finally {
@@ -127,28 +65,6 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Nút cài đặt Server IP ở góc trên */}
-        <View style={{ flexDirection: "row", justifyContent: "flex-end", marginBottom: 20 }}>
-          <TouchableOpacity
-            onPress={() => setShowServerModal(true)}
-            activeOpacity={0.7}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              paddingHorizontal: 14,
-              paddingVertical: 7,
-              borderRadius: 20,
-              backgroundColor: "rgba(255,255,255,0.06)",
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.12)",
-            }}
-          >
-            <Ionicons name="server-outline" size={14} color="#ff824c" />
-            <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, fontWeight: "700" }}>Máy chủ API</Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Logo & Header */}
         <View style={{ alignItems: "center", marginBottom: 32 }}>
           <View
@@ -264,42 +180,12 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          {/* Remember login checkbox */}
-          <TouchableOpacity
-            onPress={() => setRememberMe(!rememberMe)}
-            activeOpacity={0.7}
-            style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}
-          >
-            <View
-              style={{
-                width: 18,
-                height: 18,
-                borderRadius: 4,
-                borderWidth: 1.5,
-                borderColor: rememberMe ? "#ff682c" : "rgba(255,255,255,0.25)",
-                backgroundColor: rememberMe ? "#ff682c" : "transparent",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {rememberMe && <Ionicons name="checkmark" size={13} color="white" />}
-            </View>
-            <Text style={{ color: rememberMe ? "white" : "rgba(255,255,255,0.6)", fontSize: 13, fontWeight: "600" }}>
-              Ghi nhớ đăng nhập
-            </Text>
-          </TouchableOpacity>
-
           {/* Error message */}
           {error ? (
             <View style={{ backgroundColor: "rgba(239,68,68,0.15)", borderWidth: 1, borderColor: "rgba(239,68,68,0.35)", borderRadius: 12, padding: 12, marginVertical: 10 }}>
               <Text style={{ color: "#f87171", fontSize: 12, lineHeight: 18 }}>⚠️ {error}</Text>
             </View>
           ) : null}
-
-          {/* Server endpoint hint */}
-          <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginTop: 2, marginBottom: 18 }}>
-            Máy chủ kết nối: <Text style={{ color: "#ff824c", fontWeight: "600" }}>{apiBaseUrl}</Text>
-          </Text>
 
           {/* Login button */}
           <TouchableOpacity
@@ -341,81 +227,6 @@ export default function LoginScreen() {
         </View>
       </ScrollView>
 
-      {/* Modal Cấu hình URL Máy chủ API */}
-      <Modal visible={showServerModal} transparent animationType="fade" onRequestClose={() => setShowServerModal(false)}>
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.8)", alignItems: "center", justifyContent: "center", padding: 24 }}>
-          <View style={{ width: "100%", maxWidth: 360, backgroundColor: "#11141c", borderRadius: 24, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", padding: 22, gap: 14 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-              <Ionicons name="server" size={22} color="#ff682c" />
-              <Text style={{ color: "white", fontSize: 17, fontWeight: "bold" }}>Cài đặt máy chủ API</Text>
-            </View>
-            <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, lineHeight: 18 }}>
-              Khi kiểm thử trên thiết bị thật, hãy điền IP mạng LAN của máy tính đang chạy backend (ví dụ: http://192.168.1.50:3001).
-            </Text>
-
-            <TextInput
-              style={{
-                backgroundColor: "rgba(255,255,255,0.07)",
-                borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.15)",
-                borderRadius: 14,
-                color: "white",
-                paddingHorizontal: 14,
-                paddingVertical: 12,
-                fontSize: 14,
-              }}
-              value={tempBaseUrl}
-              onChangeText={setTempBaseUrl}
-              autoCapitalize="none"
-              autoCorrect={false}
-              placeholder="http://localhost:3001"
-              placeholderTextColor="rgba(255,255,255,0.3)"
-            />
-
-            {serverStatusMsg ? (
-              <Text style={{ fontSize: 12, color: serverStatusMsg.startsWith("✅") ? "#4ade80" : "#f87171" }}>
-                {serverStatusMsg}
-              </Text>
-            ) : null}
-
-            <View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
-              <TouchableOpacity
-                onPress={testServerConnection}
-                disabled={serverTesting}
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  backgroundColor: "rgba(255,255,255,0.08)",
-                  borderWidth: 1,
-                  borderColor: "rgba(255,255,255,0.15)",
-                  alignItems: "center",
-                }}
-              >
-                {serverTesting ? <ActivityIndicator size="small" color="white" /> : <Text style={{ color: "white", fontSize: 13, fontWeight: "600" }}>Kiểm tra</Text>}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={saveServerUrl}
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  backgroundColor: "#ff682c",
-                  alignItems: "center",
-                  shadowColor: "#ff682c",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 8,
-                  elevation: 4,
-                }}
-              >
-                <Text style={{ color: "white", fontSize: 13, fontWeight: "700" }}>Lưu lại</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </KeyboardAvoidingView>
   );
 }

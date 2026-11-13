@@ -9,6 +9,7 @@ interface MeResponse { data: { user: AuthUser } }
 function validateUser(user: unknown): asserts user is AuthUser {
   if (!isAuthUser(user)) throw new Error("Thông tin tài khoản từ máy chủ không hợp lệ.");
   if (!user.isActive) throw new Error("Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
+  if (user.role === "Driver" && user.emailVerified !== true) throw new Error("Tài khoản tài xế chưa xác minh email. Vui lòng mở link trong email và tạo mật khẩu.");
   assertAppRole(user.role);
 }
 
