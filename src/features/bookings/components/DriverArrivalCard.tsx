@@ -31,7 +31,7 @@ export function DriverArrivalCard({ booking, disabled = false }: { booking: Driv
       <Text style={[ui.title, { flex: 1 }]}>Đến khu chờ & điều phối</Text>
       <Text style={{ color: realtimeConnected ? "#15803d" : "#a16207", fontSize: 11 }}>{realtimeConnected ? "● Trực tuyến" : "Đang nối lại"}</Text>
     </View>
-    <Text style={ui.text}>{dispatch ? labels[dispatch.status] : "Khi đã tới khu chờ được phép và sẵn sàng, hãy xác nhận để điều độ biết."}</Text>
+    <Text style={ui.text}>{dispatch?.action === "gate_admitted" ? "Đã được cấp lệnh tại cổng" : dispatch ? labels[dispatch.status] : "Khi đã tới khu chờ và sẵn sàng, hãy xác nhận để điều độ biết."}</Text>
     {dispatch && <Text style={ui.muted}>Đến lúc: {bookingTime(dispatch.arrivedAt)}{booking.coordination?.isLate ? " · Đến muộn" : ""}</Text>}
     {booking.dispatch?.status === "withdrawn" && <Text style={{ color: "#a16207" }}>Lịch hoặc phân công đã thay đổi. Kiểm tra lại trước khi xác nhận đến.</Text>}
     {dispatch?.message && <Text style={ui.text}>{dispatch.message}</Text>}
@@ -39,6 +39,7 @@ export function DriverArrivalCard({ booking, disabled = false }: { booking: Driv
     {booking.gateEntryOrder?.status === "expired" && <Text style={{ color: "#a16207" }}>Lệnh vào cổng đã hết hạn. Chờ điều độ gọi lại; booking vẫn được giữ.</Text>}
     {dispatch?.holdUntil && booking.coordination?.isHeld && <Text style={{ color: "#a16207" }}>Chờ dự kiến đến: {bookingTime(dispatch.holdUntil)}</Text>}
     {!dispatch && <>
+      <Text style={ui.muted}>Đến trong khung giờ booking có thể quét tại cổng vào nếu bãi còn chỗ. Nếu đến ngoài khung giờ, hãy báo đã đến khu chờ để điều độ gọi.</Text>
       {button("Đã đến khu chờ & sẵn sàng", "arrive", !booking.coordination?.canArrive)}
       {!booking.coordination?.canArrive && <Text style={ui.muted}>Có thể xác nhận từ 12 giờ trước giờ hẹn.</Text>}
     </>}
