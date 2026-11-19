@@ -41,7 +41,7 @@ export function DriverArrivalCard({ booking, disabled = false }: { booking: Driv
     {!dispatch && <>
       <Text style={ui.muted}>Đến trong khung giờ booking có thể quét tại cổng vào nếu bãi còn chỗ. Nếu đến ngoài khung giờ, hãy báo đã đến khu chờ để điều độ gọi.</Text>
       {button("Đã đến khu chờ & sẵn sàng", "arrive", !booking.coordination?.canArrive)}
-      {!booking.coordination?.canArrive && <Text style={ui.muted}>Có thể xác nhận từ 12 giờ trước giờ hẹn.</Text>}
+      {!booking.coordination?.canArrive && <Text style={ui.muted}>Có thể xác nhận từ 3 ngày trước giờ hẹn.</Text>}
     </>}
     {dispatch?.status === "ready" && button("Tạm thời chưa sẵn sàng", "not-ready", false, true)}
     {dispatch?.status === "arrived" && button("Tôi đã sẵn sàng", "ready")}
