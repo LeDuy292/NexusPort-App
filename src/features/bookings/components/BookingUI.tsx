@@ -218,7 +218,7 @@ export function BookingCard({ booking, style }: { booking: DriverBooking; style?
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: booking.dispatch.status === "called" ? "#fef3c7" : "#f0fdf4", padding: 8, borderRadius: 10 }}>
           <Ionicons name={booking.dispatch.status === "called" ? "megaphone-outline" : "checkmark-circle-outline"} size={16} color={booking.dispatch.status === "called" ? "#b45309" : "#16a34a"} />
           <Text style={{ color: booking.dispatch.status === "called" ? "#b45309" : "#15803d", fontSize: 12, fontWeight: "600" }}>
-            {{ arrived: "Đã đến · chưa sẵn sàng", ready: booking.coordination?.isHeld ? "Điều độ yêu cầu chờ thêm" : "Sẵn sàng · chờ điều độ", called: "Điều độ đang gọi · chạm để phản hồi", acknowledged: "Đã nhận lệnh gọi" }[booking.dispatch.status]}
+            {{ arrived: "Đã đến · chưa sẵn sàng", ready: booking.coordination?.isHeld ? "Điều độ yêu cầu chờ thêm" : "Sẵn sàng · chờ điều độ", called: "Điều độ đang gọi · chạm để phản hồi", acknowledged: booking.dispatch.action === "gate_admitted" ? "Đã cấp lệnh tại cổng" : "Đã nhận lệnh gọi" }[booking.dispatch.status]}
           </Text>
         </View>
       )}
