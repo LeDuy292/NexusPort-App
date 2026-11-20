@@ -141,22 +141,6 @@ export default function DriverJourneyScreen() {
             <Text style={ui.text}>Đến GATE-01 với xe {booking.truckPlate}. Camera sẽ kiểm tra biển số và lệnh vào cổng.</Text>
             <Text style={ui.muted}>Hệ thống hiện mô phỏng xe qua barie trong 10 giây sau khi xác minh thành công. Bước tiếp theo mở khi API ghi nhận Gate In.</Text>
             <Text style={ui.muted}>Lệnh có hiệu lực đến {bookingTime(booking.gateEntryOrder?.validUntil)}.</Text>
-            <TouchableOpacity
-              onPress={() => router.push({ pathname: '/(driver)/qr-checkin', params: { bookingId: booking.id } })}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                backgroundColor: '#1d6c56',
-                paddingVertical: 12,
-                borderRadius: 12,
-                marginTop: 6,
-              }}
-            >
-              <MaterialCommunityIcons name="qrcode-scan" size={18} color="#fff" />
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>Xuất trình mã e-Pass / QR vào cổng</Text>
-            </TouchableOpacity>
           </View>}
           {isCurrent && selected === 'to_yard' && <>
             <Text style={ui.text}>{target ? `Đang trên đường tới ${target}. Trạng thái này được giữ đến khi bạn xác nhận đã đến.` : route ? 'Đã vào bãi. Đang chờ điểm giao nhận được phân công.' : 'Đã ghi nhận vào cổng. Đang đồng bộ điểm giao nhận và lộ trình.'}</Text>
@@ -169,7 +153,7 @@ export default function DriverJourneyScreen() {
             {progress?.containerConfirmedAt && containers?.next && containers.next.id !== container?.id && button(`Tiếp tục ${containers.next.containerNo}`, () => setContainerId(containers.next!.id), !fresh)}
             {progress?.canConfirmContainer && button(`Kiểm tra & xác nhận ${bookingTypeLabel(booking.bookingType).toLowerCase()}`, () => { setCondition('OK'); setModal('confirm'); }, !fresh)}
           </>}
-          {isCurrent && selected === 'to_exit' && <View style={styles.note}><Text style={ui.text}>Đã hoàn tất giao nhận các container của booking. Theo tuyến trên bản đồ đến {progress?.exitGateCode || 'GATE-02'}.</Text><Text style={ui.text}>Dùng cùng booking {booking.bookingCode} tại cổng ra; không tạo booking mới. Chuyến chỉ hoàn thành khi hệ thống ghi nhận Gate Out.</Text></View>}
+          {isCurrent && selected === 'to_exit' && <View style={styles.note}><Text style={ui.text}>Đã hoàn tất giao nhận các container của booking. Theo tuyến trên bản đồ đến {progress?.exitGateCode || 'GATE-02'}.</Text></View>}
           {isCurrent && selected === 'gate_out' && <Text style={ui.text}>Đang ở mốc cổng ra. Chờ hệ thống kiểm tra và ghi nhận xe qua cổng. Hoàn thành sẽ tự cập nhật.</Text>}
           {selected === 'completed' && isCurrent && <Text style={{ color: '#1d6c56', lineHeight: 22 }}>Đã hoàn tất giao / nhận hàng và rời cảng. Chạm các chặng phía trên để xem lại.</Text>}
           {actionError && <Text accessibilityRole="alert" style={styles.error}>{actionError}</Text>}

@@ -45,7 +45,7 @@ export default function DriverAppointments() {
         {appointments.length > 0 && pendingCount > 0 && (
           <View style={[ui.card, { backgroundColor: "#fffbeb", borderColor: "#fde68a" }]}>
             <Text style={{ color: "#92400e", fontSize: 13, lineHeight: 20 }}>
-              Có <Text style={{ fontWeight: "800" }}>{pendingCount} booking</Text> đang chờ điều độ duyệt chưa xuất hiện trong danh sách lịch hẹn.
+              Có <Text style={{ fontWeight: "800" }}>{pendingCount} lịch hẹn</Text> đang chờ điều độ duyệt chưa xuất hiện trong danh sách lịch hẹn.
             </Text>
           </View>
         )}

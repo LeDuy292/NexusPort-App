@@ -7,18 +7,14 @@ export const JOURNEY_STAGES: { id: JourneyStage; title: string; icon: string; de
   { id: 'gate_in', title: 'Cổng vào', icon: 'enter-outline', description: 'Đến đúng cổng, để camera đối soát biển số với khai báo và lệnh vào cảng.' },
   { id: 'to_yard', title: 'Đến điểm nhận', icon: 'navigate-outline', description: 'Theo tuyến được phân công đến điểm giao nhận. Chỉ xác nhận đã đến khi xe ở đúng điểm.' },
   { id: 'handover', title: 'Giao / nhận hàng', icon: 'cube-outline', description: 'Chờ nhân viên bãi xử lý, kiểm tra số container, số chì và tình trạng trước khi xác nhận.' },
-  { id: 'to_exit', title: 'Đến cổng ra', icon: 'return-up-forward-outline', description: 'Khi đủ container đã được xác nhận, di chuyển theo tuyến đến cổng ra. Tiếp tục dùng booking của chuyến này, không cần tạo booking mới.' },
-  { id: 'gate_out', title: 'Qua cổng ra', icon: 'exit-outline', description: 'Camera cổng ra đối soát biển số với cùng booking, lượt vào và các container đã hoàn tất. Hệ thống ghi nhận xe rời cảng sau khi qua cổng.' },
+  { id: 'gate_out', title: 'Qua cổng ra', icon: 'exit-outline', description: 'Camera cổng ra đối soát biển số với cùng lịch hẹn, lượt vào và các container đã hoàn tất. Hệ thống ghi nhận xe rời cảng sau khi qua cổng.' },
   { id: 'completed', title: 'Hoàn thành', icon: 'flag-outline', description: 'Đã ghi nhận xe rời cảng. Có thể xem lại các mốc và thông tin booking.' },
 ];
 
 export function currentJourneyStage(booking?: DriverBooking | null, route?: SmartRoute | null): JourneyStage {
   const journey = route?.journey;
   if (journey?.gateOutAt || journey?.phase === 'exited') return 'completed';
-  if (journey?.phase === 'ready_for_gate_out') {
-    const origin = route?.navigation?.origin;
-    return journey.exitGateCode && origin?.gateCode === journey.exitGateCode ? 'gate_out' : 'to_exit';
-  }
+  if (journey?.phase === 'ready_for_gate_out') return 'gate_out';
   if (journey?.phase === 'at_yard') return 'handover';
   if (journey?.gateInAt || route?.gateTransactionId) return 'to_yard';
   // A consumed permission means entry was persisted even if route loading is
@@ -50,7 +46,7 @@ export function containerProgress(booking: DriverBooking, routes: SmartRoute[]) 
 
 export function bookingJourneyNotice(booking: DriverBooking): string | null {
   const status = booking.status.toLowerCase();
-  if (status === 'pending') return 'Booking đang chờ duyệt nên chưa có lịch hẹn để thực hiện. Lịch và các bước xác nhận chỉ mở sau khi điều độ duyệt. Ứng dụng sẽ tự cập nhật khi có kết quả.';
-  if (['canceled', 'cancelled', 'rejected', 'expired'].includes(status)) return 'Booking này không còn được thực hiện. Bạn có thể xem thông tin và chọn booking khác.';
+  if (status === 'pending') return 'Lịch hẹn đang chờ duyệt nên chưa thể thực hiện. Lịch và các bước xác nhận chỉ mở sau khi điều độ duyệt. Ứng dụng sẽ tự cập nhật khi có kết quả.';
+  if (['canceled', 'cancelled', 'rejected', 'expired'].includes(status)) return 'Lịch hẹn này không còn được thực hiện. Bạn có thể xem thông tin và chọn booking khác.';
   return null;
 }

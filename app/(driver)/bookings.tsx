@@ -19,7 +19,7 @@ export default function DriverBookings() {
 
   return (
     <View style={ui.page}>
-      <BookingHeader title="Booking được giao" />
+      <BookingHeader title="Lịch hẹn được giao" />
       <View
         style={{
           flexDirection: "row",
