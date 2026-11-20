@@ -244,7 +244,7 @@ export function BookingApprovalNotice({ pendingCount = 0 }: { pendingCount?: num
           <Ionicons name="time-outline" size={20} color="#b45309" />
         </View>
         <Text style={[ui.title, { flex: 1, color: "#92400e" }]}>
-          {pendingCount ? "Booking đang chờ duyệt" : "Chưa có lịch hẹn đã duyệt"}
+          {pendingCount ? "Lịch hẹn đang chờ duyệt" : "Chưa có lịch hẹn đã duyệt"}
         </Text>
       </View>
       <Text style={[ui.text, { color: "#78350f" }]}>

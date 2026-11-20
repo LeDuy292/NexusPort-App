@@ -10,9 +10,8 @@ import { canViewAppointment, isApproved } from "../../src/features/bookings/book
 const ACTIONS = [
   { label: "Lệnh vận chuyển", subtitle: "Chuyến xe được giao & 11 bước hành trình", icon: "truck-fast-outline", route: "/(driver)/trips", color: "#ff682c", bg: "#fff7ed" },
   { label: "Hành trình Smart Route", subtitle: "Sơ đồ bãi 2D & hướng dẫn điều hướng", icon: "map-marker-path", route: "/(driver)/yard-navigation", color: "#0284c7", bg: "#f0f9ff" },
-  { label: "Check-in e-Pass", subtitle: "Mã QR xuất trình tự động tại cổng cảng", icon: "qrcode-scan", route: "/(driver)/qr-checkin", color: "#16a34a", bg: "#f0fdf4" },
-  { label: "Booking được giao", subtitle: "Danh sách xe, hàng hóa & trạng thái duyệt", icon: "clipboard-list-outline", route: "/(driver)/bookings", color: "#ea580c", bg: "#fff7ed" },
-  { label: "Lịch hẹn", subtitle: "Khung giờ booking cảng đã được duyệt", icon: "calendar-clock", route: "/(driver)/appointments", color: "#0284c7", bg: "#f0f9ff" },
+  { label: "Lịch hẹn được giao", subtitle: "Danh sách xe, hàng hóa & trạng thái duyệt", icon: "clipboard-list-outline", route: "/(driver)/bookings", color: "#ea580c", bg: "#fff7ed" },
+  { label: "Lịch hẹn", subtitle: "Khung giờ lịch hẹn cảng đã được duyệt", icon: "calendar-clock", route: "/(driver)/appointments", color: "#0284c7", bg: "#f0f9ff" },
   { label: "Báo sự cố (SOS)", subtitle: "Phản ánh xe, hàng hoặc sự cố tại bãi", icon: "alert-circle-outline", route: "/(driver)/incident", color: "#dc2626", bg: "#fef2f2" },
   { label: "Thông báo", subtitle: "Phân công & kết quả duyệt từ điều độ", icon: "bell-outline", route: "/(driver)/notifications", color: "#8b5cf6", bg: "#f5f3ff" },
   { label: "Tài khoản", subtitle: "Thông tin tài xế & quản lý phiên làm việc", icon: "card-account-details-outline", route: "/(driver)/account", color: "#475569", bg: "#f8fafc" },
@@ -289,7 +288,7 @@ export default function DriverHome() {
                   </Text>
                   <Text style={{ color: "#64748b", fontSize: 11, lineHeight: 15 }} numberOfLines={2}>
                     {action.route === "/(driver)/appointments" && !confirmedBookings.length
-                      ? "Mở sau khi booking duyệt"
+                      ? "Mở sau khi lịch hẹn được duyệt"
                       : action.subtitle}
                   </Text>
                 </View>
@@ -301,7 +300,7 @@ export default function DriverHome() {
         {/* Recent Bookings */}
         <View style={{ gap: 12, marginTop: 4 }}>
           <View style={ui.row}>
-            <Text style={ui.title}>Booking được giao gần đây</Text>
+            <Text style={ui.title}>Lịch hẹn được giao gần đây</Text>
             <TouchableOpacity
               onPress={() => router.push("/(driver)/bookings" as any)}
               style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
@@ -316,7 +315,7 @@ export default function DriverHome() {
           {feed?.profile && !bookings.length && (
             <View style={[ui.card, { alignItems: "center", paddingVertical: 24 }]}>
               <Ionicons name="document-text-outline" size={32} color="#cbd5e1" />
-              <Text style={[ui.muted, { marginTop: 8 }]}>Chưa có booking được giao.</Text>
+              <Text style={[ui.muted, { marginTop: 8 }]}>Chưa có lịch hẹn được giao.</Text>
             </View>
           )}
         </View>

@@ -10,29 +10,15 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getTransportOrders, type Trip } from "../../src/features/driver/services/tripService";
 import { subscribeDriverRealtime } from "../../src/features/driver/services/realtimeService";
+import { useBookings } from "../../src/features/bookings/BookingProvider";
+import { STATUS_CONFIG as FLOW_STATUS, buildTripFlow, dispatchBadge } from "../../src/features/driver/tripFlow";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; color: string; icon: string }
-> = {
-  Assigned: { label: "Được phân công", color: "#0369a1", icon: "clipboard-check-outline" },
-  Acknowledged: { label: "Đã xác nhận", color: "#7c3aed", icon: "hand-okay" },
-  "Vehicle Picked Up": { label: "Đã lấy xe", color: "#a16207", icon: "truck-outline" },
-  "Container Picked Up": { label: "Đã lấy container", color: "#a16207", icon: "package-variant" },
-  "Gate In": { label: "Đã Gate In", color: "#ff682c", icon: "boom-gate-up-outline" },
-  "In Transit": { label: "Đang vận chuyển", color: "#ff682c", icon: "truck-fast" },
-  "Arrived at Yard": { label: "Đã đến Bãi", color: "#15803d", icon: "map-marker-check" },
-  "Container Delivered": { label: "Đã giao container", color: "#15803d", icon: "package-variant-closed-check" },
-  "Gate Out Completed": { label: "Đã Gate Out", color: "#15803d", icon: "boom-gate-outline" },
-  "Vehicle Returned": { label: "Đã trả xe", color: "#15803d", icon: "truck-check-outline" },
-  Completed: { label: "Hoàn thành", color: "#15803d", icon: "check-circle" },
-  Cancelled: { label: "Đã hủy", color: "#b91c1c", icon: "close-circle" },
-};
+const STATUS_CONFIG = FLOW_STATUS;
 
 const FILTER_TABS: { key: string; label: string }[] = [
   { key: "IN_PROGRESS", label: "Đang thực hiện" },
@@ -65,7 +51,10 @@ export default function TripsList() {
     status && FILTER_TABS.some((tab) => tab.key === status) ? status : "IN_PROGRESS"
   );
   const [total, setTotal] = useState(0);
+  const bookings = useBookings().feed?.bookings ?? [];
   const [realtimeOnline, setRealtimeOnline] = useState(false);
+  // Lần mở đầu tiên: nếu chưa có chuyến đang thực hiện mà có chuyến được giao thì mở sẵn tab "Được giao"
+  const autoPicked = useRef(Boolean(status));
 
   useEffect(() => {
     if (status && FILTER_TABS.some((tab) => tab.key === status)) setActiveFilter(status);
@@ -75,7 +64,17 @@ export default function TripsList() {
     async (filter = activeFilter, silent = false) => {
       if (!silent) setLoading(true);
       try {
-        const result = await getTransportOrders({ status: filter, limit: 50 });
+        let result = await getTransportOrders({ status: filter, limit: 50 });
+        if (!autoPicked.current) {
+          autoPicked.current = true;
+          if (filter === "IN_PROGRESS" && !(result.orders || result.trips || []).length) {
+            const assigned = await getTransportOrders({ status: "ASSIGNED", limit: 50 });
+            if ((assigned.orders || assigned.trips || []).length) {
+              result = assigned;
+              setActiveFilter("ASSIGNED");
+            }
+          }
+        }
         setTrips(result.orders || result.trips || []);
         setTotal(result.total);
       } catch (err: any) {
@@ -288,6 +287,9 @@ export default function TripsList() {
               icon: "information-outline",
             };
             const isActive = !["Completed", "Cancelled"].includes(trip.status);
+            const booking = bookings.find((b) => b.id === trip.bookingId) || null;
+            const flow = buildTripFlow(trip, booking);
+            const dispatch = dispatchBadge(trip, booking);
 
             return (
               <TouchableOpacity
@@ -331,7 +333,7 @@ export default function TripsList() {
                       {trip.containerNo || "—"}
                     </Text>
                     <Text style={{ color: "#64748b", fontSize: 12, marginTop: 2, fontWeight: "500" }}>
-                      {trip.tripCode} · {trip.bookingType || "—"}
+                      {trip.tripCode} · {String(trip.bookingType || "").toLowerCase() === "pickup" ? "Lấy container" : String(trip.bookingType || "").toLowerCase() === "dropoff" ? "Giao container" : "—"}
                     </Text>
                   </View>
                   <View
@@ -387,29 +389,28 @@ export default function TripsList() {
                   )}
                 </View>
 
-                {/* Next step indicator for active trips */}
-                {isActive && trip.nextStep && (
-                  <View
-                    style={{
-                      marginTop: 12,
-                      paddingTop: 10,
-                      borderTopWidth: 1,
-                      borderTopColor: "#f8fafc",
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                      <Ionicons name="arrow-forward-circle" size={16} color="#ff682c" />
-                      <Text style={{ color: "#ff682c", fontSize: 12, fontWeight: "700" }}>
-                        Bước tiếp: {STATUS_CONFIG[trip.nextStep]?.label || trip.nextStep}
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                      <Text style={{ color: "#64748b", fontSize: 12, fontWeight: "600" }}>Chi tiết</Text>
-                      <Ionicons name="chevron-forward" size={14} color="#64748b" />
-                    </View>
+                {/* Lệnh điều phối + việc cần làm tiếp theo */}
+                {isActive && (
+                  <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#f8fafc", gap: 8 }}>
+                    {dispatch && (
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <MaterialCommunityIcons name="traffic-cone" size={14} color={dispatch.color} />
+                        <Text style={{ color: "#64748b", fontSize: 12, fontWeight: "600" }}>Lệnh điều phối:</Text>
+                        <Text style={{ color: dispatch.color, fontSize: 12, fontWeight: "800" }}>{dispatch.label}</Text>
+                      </View>
+                    )}
+                    {flow.current && (
+                      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 6 }}>
+                          <Ionicons name="arrow-forward-circle" size={16} color="#ff682c" />
+                          <Text style={{ flex: 1, color: "#ff682c", fontSize: 12, fontWeight: "700" }}>Tiếp theo: {flow.current.label} · {flow.current.actor}</Text>
+                        </View>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                          <Text style={{ color: "#64748b", fontSize: 12, fontWeight: "600" }}>Chi tiết</Text>
+                          <Ionicons name="chevron-forward" size={14} color="#64748b" />
+                        </View>
+                      </View>
+                    )}
                   </View>
                 )}
               </TouchableOpacity>

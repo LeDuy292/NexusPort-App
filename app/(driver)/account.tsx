@@ -8,9 +8,8 @@ import { BookingHeader, ui } from "../../src/features/bookings/components/Bookin
 
 const MENU_ITEMS = [
   { label: "Lệnh vận chuyển (Chuyến xe)", desc: "Tiến trình 11 bước & vị trí bãi", path: "/(driver)/trips", icon: "truck-fast-outline", color: "#ff682c", bg: "#fff7ed" },
-  { label: "Check-in e-Pass (Mã QR)", desc: "Mã ra vào cổng tự động Smart Gate", path: "/(driver)/qr-checkin", icon: "qrcode-scan", color: "#16a34a", bg: "#f0fdf4" },
   { label: "Lịch hẹn cảng", desc: "Khung giờ đã được điều độ phê duyệt", path: "/(driver)/appointments", icon: "calendar-clock", color: "#0284c7", bg: "#f0f9ff" },
-  { label: "Booking được giao", desc: "Danh sách booking & thông tin hàng", path: "/(driver)/bookings", icon: "clipboard-list-outline", color: "#ea580c", bg: "#fff7ed" },
+  { label: "Lịch hẹn được giao", desc: "Danh sách lịch hẹn & thông tin hàng", path: "/(driver)/bookings", icon: "clipboard-list-outline", color: "#ea580c", bg: "#fff7ed" },
   { label: "Báo sự cố khẩn cấp (SOS)", desc: "Báo hỏng xe, sự cố seal, trễ hẹn", path: "/(driver)/incident", icon: "alert-circle-outline", color: "#dc2626", bg: "#fef2f2" },
 ] as const;
 

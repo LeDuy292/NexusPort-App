@@ -41,7 +41,7 @@ export default function BookingDetailScreen() {
 
   return (
     <View style={ui.page}>
-      <BookingHeader title="Chi tiết booking" />
+      <BookingHeader title="Chi tiết lịch hẹn" />
       <ScrollView contentContainerStyle={ui.content} showsVerticalScrollIndicator={false}>
         {error ? (
           <View style={[ui.card, { borderColor: "#fecaca", backgroundColor: "#fef2f2" }]}>
@@ -107,7 +107,7 @@ export default function BookingDetailScreen() {
                   {canViewAppointment(booking.status)
                     ? "Lịch hẹn đã được phê duyệt"
                     : booking.status === "pending"
-                    ? "Chờ điều độ duyệt booking"
+                    ? "Chờ điều độ duyệt lịch hẹn"
                     : "Lịch hẹn không còn hiệu lực"}
                 </Text>
               </View>

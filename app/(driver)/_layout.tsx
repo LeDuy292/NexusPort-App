@@ -12,7 +12,7 @@ export default function DriverLayout() {
     { title: "Tổng quan", path: "/(driver)", icon: "grid-outline", activeIcon: "grid", active: path === "/" || path === "/(driver)" },
     { title: "Lệnh VC", path: "/(driver)/trips", icon: "car-outline", activeIcon: "car", active: path.includes("trip") },
     { title: "Hành trình", path: "/(driver)/yard-navigation", icon: "navigate-outline", activeIcon: "navigate", active: path.includes("yard-navigation") },
-    { title: "Booking", path: "/(driver)/bookings", icon: "reader-outline", activeIcon: "reader", active: path.includes("booking") || path.includes("appointments") },
+    { title: "Lịch hẹn", path: "/(driver)/bookings", icon: "reader-outline", activeIcon: "reader", active: path.includes("booking") || path.includes("appointments") },
     { title: "Tài khoản", path: "/(driver)/account", icon: "person-outline", activeIcon: "person", active: path.includes("account") },
   ];
 
