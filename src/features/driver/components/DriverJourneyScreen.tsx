@@ -84,7 +84,7 @@ export default function DriverJourneyScreen() {
   const button = (label: string, onPress: () => void, disabled = false) => <TouchableOpacity accessibilityRole="button" disabled={disabled} onPress={onPress} style={[styles.primary, disabled && { opacity: .45 }]}>
     <Text style={styles.primaryText}>{acting ? 'Đang cập nhật…' : label}</Text>
   </TouchableOpacity>;
-  const map = <YardRouteMap route={route} map={journey.map} referenceLayout={journey.referenceLayout} stage={current} stale={!!journey.error || !!feedError || !!journey.mapWarning} />;
+  const map = <YardRouteMap route={route} map={journey.map} stale={!!journey.error || !!feedError || !!journey.mapWarning} />;
 
   return <View style={ui.page}>
     <View style={styles.header}>
@@ -141,26 +141,10 @@ export default function DriverJourneyScreen() {
             <Text style={ui.text}>Đến GATE-01 với xe {booking.truckPlate}. Camera sẽ kiểm tra biển số và lệnh vào cổng.</Text>
             <Text style={ui.muted}>Hệ thống hiện mô phỏng xe qua barie trong 10 giây sau khi xác minh thành công. Bước tiếp theo mở khi API ghi nhận Gate In.</Text>
             <Text style={ui.muted}>Lệnh có hiệu lực đến {bookingTime(booking.gateEntryOrder?.validUntil)}.</Text>
-            <TouchableOpacity
-              onPress={() => router.push({ pathname: '/(driver)/qr-checkin', params: { bookingId: booking.id } })}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                backgroundColor: '#1d6c56',
-                paddingVertical: 12,
-                borderRadius: 12,
-                marginTop: 6,
-              }}
-            >
-              <MaterialCommunityIcons name="qrcode-scan" size={18} color="#fff" />
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>Xuất trình mã e-Pass / QR vào cổng</Text>
-            </TouchableOpacity>
           </View>}
           {isCurrent && selected === 'to_yard' && <>
             <Text style={ui.text}>{target ? `Đang trên đường tới ${target}. Trạng thái này được giữ đến khi bạn xác nhận đã đến.` : route ? 'Đã vào bãi. Đang chờ điểm giao nhận được phân công.' : 'Đã ghi nhận vào cổng. Đang đồng bộ điểm giao nhận và lộ trình.'}</Text>
-            {route?.navigation?.status === 'available' && <Text style={ui.muted}>{Math.round(route.navigation.distanceMeters || 0)} m · khoảng {Math.max(1, Math.ceil((route.navigation.estimatedSeconds || 0) / 60))} phút</Text>}
+            {route?.navigation?.status === 'available' && route.navigation.distanceMeters!=null && route.navigation.estimatedSeconds!=null && <Text style={ui.muted}>{Math.round(route.navigation.distanceMeters || 0)} m · khoảng {Math.max(1, Math.ceil((route.navigation.estimatedSeconds || 0) / 60))} phút</Text>}
             {progress?.canArrive ? button('Tôi đã đến đúng điểm giao nhận', () => setModal('arrive'), !fresh) : <Text style={ui.muted}>Chờ tuyến và điểm giao nhận hợp lệ. Bạn chưa cần thực hiện thao tác khác.</Text>}
           </>}
           {isCurrent && selected === 'handover' && <>
@@ -169,7 +153,7 @@ export default function DriverJourneyScreen() {
             {progress?.containerConfirmedAt && containers?.next && containers.next.id !== container?.id && button(`Tiếp tục ${containers.next.containerNo}`, () => setContainerId(containers.next!.id), !fresh)}
             {progress?.canConfirmContainer && button(`Kiểm tra & xác nhận ${bookingTypeLabel(booking.bookingType).toLowerCase()}`, () => { setCondition('OK'); setModal('confirm'); }, !fresh)}
           </>}
-          {isCurrent && selected === 'to_exit' && <View style={styles.note}><Text style={ui.text}>Đã hoàn tất giao nhận các container của booking. Theo tuyến trên bản đồ đến {progress?.exitGateCode || 'GATE-02'}.</Text><Text style={ui.text}>Dùng cùng booking {booking.bookingCode} tại cổng ra; không tạo booking mới. Chuyến chỉ hoàn thành khi hệ thống ghi nhận Gate Out.</Text></View>}
+          {isCurrent && selected === 'to_exit' && <View style={styles.note}><Text style={ui.text}>Đã hoàn tất giao nhận các container của booking. Theo tuyến trên bản đồ đến {progress?.exitGateCode || 'GATE-02'}.</Text></View>}
           {isCurrent && selected === 'gate_out' && <Text style={ui.text}>Đang ở mốc cổng ra. Chờ hệ thống kiểm tra và ghi nhận xe qua cổng. Hoàn thành sẽ tự cập nhật.</Text>}
           {selected === 'completed' && isCurrent && <Text style={{ color: '#1d6c56', lineHeight: 22 }}>Đã hoàn tất giao / nhận hàng và rời cảng. Chạm các chặng phía trên để xem lại.</Text>}
           {actionError && <Text accessibilityRole="alert" style={styles.error}>{actionError}</Text>}
@@ -217,18 +201,18 @@ export default function DriverJourneyScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { paddingTop: 54, paddingBottom: 18, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  header: { paddingTop: 54, paddingBottom: 16, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   eyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5, color: '#64748b' },
-  heading: { color: '#172b3a', fontSize: 27, fontWeight: '800', marginVertical: 5 },
-  summary: { borderRadius: 20, padding: 20, gap: 10, backgroundColor: '#fff', borderWidth: 1, borderColor: '#dce5e5' },
+  heading: { color: '#0f172a', fontSize: 24, fontWeight: '800', marginVertical: 4 },
+  summary: { borderRadius: 20, padding: 20, gap: 10, backgroundColor: '#fff', borderWidth: 1, borderColor: '#e2e8f0', shadowColor: '#0f172a', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
   bookingCode: { fontSize: 23, fontWeight: '800', color: '#172b3a' },
   chip: { padding: 12, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#e2e8f0' },
-  selectedChip: { backgroundColor: '#edf6f1', borderColor: '#8fbaa8' },
-  link: { color: '#1d6c56', fontSize: 12, fontWeight: '700', lineHeight: 20 },
+  selectedChip: { backgroundColor: '#fff7ed', borderColor: '#fed7aa' },
+  link: { color: '#ff682c', fontSize: 12, fontWeight: '700', lineHeight: 20 },
   iconButton: { padding: 10, borderRadius: 12, backgroundColor: '#edf1f5' },
   stepTitle: { fontSize: 22, fontWeight: '800', color: '#172b3a' },
   note: { borderRadius: 12, backgroundColor: '#f8fafb', padding: 12, gap: 8 },
-  primary: { backgroundColor: '#1d6c56', borderRadius: 13, padding: 16, alignItems: 'center' },
+  primary: { backgroundColor: '#ff682c', borderRadius: 14, padding: 16, alignItems: 'center', shadowColor: '#ff682c', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.28, shadowRadius: 10, elevation: 4 },
   primaryText: { color: '#fff', fontWeight: '700', fontSize: 14, textAlign: 'center' },
   error: { color: '#b45309', fontSize: 13, lineHeight: 21 },
   backdrop: { flex: 1, justifyContent: 'flex-end', padding: 12, backgroundColor: '#0f172a88' },

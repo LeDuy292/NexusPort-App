@@ -15,6 +15,11 @@ export async function markBookingNotificationRead(id: string) {
   await apiRequest(`/api/driver-bookings/notifications/${encodeURIComponent(id)}/read`, { method: "POST" });
 }
 
+// Tài xế tự xác nhận đã qua cổng vào (khi cổng chưa tự ghi nhận)
+export async function confirmPassedGate(booking: DriverBooking) {
+  await apiRequest<{ data: unknown }>("/api/driver-bookings/" + encodeURIComponent(booking.id) + "/passed-gate", { method: "POST", body: JSON.stringify({}) });
+}
+
 export async function updateBookingArrival(booking: DriverBooking, action: "arrive" | "ready" | "not-ready" | "acknowledge") {
   const response = await apiRequest<{ data: { booking: DriverBooking } }>(
     "/api/booking-dispatch/" + encodeURIComponent(booking.id) + "/" + action,

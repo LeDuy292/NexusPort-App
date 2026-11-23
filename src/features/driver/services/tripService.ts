@@ -56,6 +56,8 @@ export interface Trip {
   yardName?: string;
   yardAddress?: string;
   sealNo?: string;
+  eirNo?: string;
+  eirPhotos?: string[];
   containerCondition?: string;
   recipientName?: string;
   status: TripStatus;
@@ -102,6 +104,7 @@ export interface TripsPage {
 
 export interface DeliveryData {
   sealNo?: string;
+  eirNo?: string;
   containerCondition?: string;
   recipientName?: string;
   note?: string;

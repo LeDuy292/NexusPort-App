@@ -2,7 +2,7 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { createHarness } = require("./helpers/loadTypeScript.cjs");
 
-const driver = { id: "driver-user-id", username: "driver01", email: "driver@example.com", fullName: "Tài xế thử nghiệm", role: "Driver", isActive: true };
+const driver = { id: "driver-user-id", username: "driver01", email: "driver@example.com", fullName: "Tài xế thử nghiệm", role: "Driver", isActive: true, emailVerified: true };
 const authPath = "src/features/auth/authService.ts";
 const storagePath = "src/features/auth/sessionStorage.ts";
 const clientPath = "src/lib/apiClient.ts";
@@ -27,6 +27,21 @@ test("wrong password / inactive account does not create a session", async () => 
     await assert.rejects(harness.load(authPath).login("driver01", "wrong", "Driver"), /Đăng nhập bị từ chối/);
     assert.equal(harness.values.has("user"), false);
   }
+});
+
+test("active driver without verified email cannot sign in", async () => {
+  for (const emailVerified of [false, undefined]) {
+    const harness = createHarness(async () => reply({data: {token: "token", user: {...driver, emailVerified}}}));
+    await assert.rejects(harness.load(authPath).login("driver01", "password", "Driver"), /chưa xác minh email/);
+    assert.equal(harness.values.has("user"), false);
+  }
+});
+
+test("restoring an unverified driver clears the previous session", async () => {
+  const harness = createHarness(async () => reply({data: {user: {...driver, emailVerified: false}}}));
+  harness.values.set("user", session());
+  assert.equal(await harness.load(authPath).restoreSession(), null);
+  assert.equal(harness.values.has("user"), false);
 });
 
 test("Carrier cannot impersonate Driver by selecting Driver on the login screen", async () => {
@@ -132,4 +147,41 @@ test("sign-out storage operation removes all account data", async () => {
   harness.values.set("user", session());
   await harness.load(storagePath).clearSession();
   assert.equal(harness.values.has("user"), false);
+});
+
+test("restoring an old app install deletes remembered plaintext credentials", async () => {
+  const harness = createHarness(() => { throw new Error("should not fetch"); });
+  for (const key of ["remember_driver_me", "saved_driver_user", "saved_driver_pass"]) harness.values.set(key, "old-data");
+  assert.equal(await harness.load(authPath).restoreSession(), null);
+  for (const key of ["remember_driver_me", "saved_driver_user", "saved_driver_pass"]) assert.equal(harness.values.has(key), false);
+});
+
+test("a physical phone resolves API origins from its Expo development host", async () => {
+  const harness = createHarness(async () => reply({}), { platform: "android", hostUri: "192.168.1.42:8081" });
+  const config = harness.load("src/config/api.ts");
+  assert.equal(await config.getApiBaseUrl(), "http://192.168.1.42:3001");
+  assert.equal(await config.getNodeCoreBaseUrl(), "http://192.168.1.42:4000");
+});
+
+test("explicit environment endpoints override stale stored endpoints", async () => {
+  const harness = createHarness(async () => reply({}), {env: {EXPO_PUBLIC_API_URL: "https://api.example.test/api/", EXPO_PUBLIC_NODE_CORE_URL: "https://routes.example.test/api/v1/"}});
+  harness.values.set("api_base_url", "http://old-phone-ip:3001");
+  harness.values.set("node_core_base_url", "http://old-phone-ip:4000");
+  const config = harness.load("src/config/api.ts");
+  assert.equal(await config.getApiBaseUrl(), "https://api.example.test");
+  assert.equal(await config.getNodeCoreBaseUrl(), "https://routes.example.test");
+});
+
+test("Android emulator fallback uses the host bridge instead of device localhost", async () => {
+  const harness = createHarness(async () => reply({}), {platform: "android"});
+  assert.equal(await harness.load("src/config/api.ts").getApiBaseUrl(), "http://10.0.2.2:3001");
+});
+
+test("Expo host replaces a stale endpoint from the removed server-settings screen", async () => {
+  const harness = createHarness(async () => reply({}), {platform: "android", hostUri: "192.168.1.42:8081"});
+  harness.values.set("api_base_url", "http://localhost:3001");
+  harness.values.set("node_core_base_url", "http://old-lan-host:4000");
+  const config = harness.load("src/config/api.ts");
+  assert.equal(await config.getApiBaseUrl(), "http://192.168.1.42:3001");
+  assert.equal(await config.getNodeCoreBaseUrl(), "http://192.168.1.42:4000");
 });
