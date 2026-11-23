@@ -13,7 +13,9 @@ export const JOURNEY_STAGES: { id: JourneyStage; title: string; icon: string; de
 
 export function currentJourneyStage(booking?: DriverBooking | null, route?: SmartRoute | null): JourneyStage {
   const journey = route?.journey;
-  if (journey?.gateOutAt || journey?.phase === 'exited') return 'completed';
+  // Chỉ coi là hoàn thành khi có cả giờ ra cổng LẪN xác nhận giao/nhận container của bãi.
+  // Thiếu xác nhận thì giữ ở chặng giao/nhận hàng để không đánh dấu nhầm "Hoàn tất" mọi chặng.
+  if (journey?.gateOutAt || journey?.phase === 'exited') return journey?.containerConfirmedAt ? 'completed' : 'handover';
   if (journey?.phase === 'ready_for_gate_out') return 'gate_out';
   if (journey?.phase === 'at_yard') return 'handover';
   if (journey?.gateInAt || route?.gateTransactionId) return 'to_yard';

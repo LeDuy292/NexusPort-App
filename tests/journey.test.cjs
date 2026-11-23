@@ -25,7 +25,8 @@ test('arrival, handover, exit road and completion use server evidence', () => {
   assert.equal(currentJourneyStage(booking(), route('at_yard', { containerConfirmedAt: 'now' })), 'handover', 'one confirmed container does not imply the whole booking is ready to exit');
   assert.equal(currentJourneyStage(booking(), route('ready_for_gate_out', { exitGateCode: 'GATE-02' })), 'to_exit');
   assert.equal(currentJourneyStage(booking(), { ...route('ready_for_gate_out', { exitGateCode: 'GATE-02' }), navigation: { origin: { gateCode: 'GATE-02' } } }), 'gate_out');
-  assert.equal(currentJourneyStage(booking(), route('exited', { gateOutAt: '2026-10-18T03:00:00Z' })), 'completed');
+  assert.equal(currentJourneyStage(booking(), route('exited', { gateOutAt: '2026-10-18T03:00:00Z', containerConfirmedAt: '2026-10-18T02:30:00Z' })), 'completed');
+  assert.equal(currentJourneyStage(booking(), route('exited', { gateOutAt: '2026-10-18T03:00:00Z' })), 'handover', 'exit without the yard confirmation must not mark the whole journey complete');
 });
 
 test('past stages stay complete, the active stage is distinct, and future stages stay pending', () => {
