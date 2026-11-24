@@ -4,8 +4,8 @@
 
 1. Chạy backend Express và database của `NexusPort-Backend-Website`.
 2. `npm install`, sau đó `npm run web` trong repo này.
-3. Mặc định API ở `http://localhost:3001`. Để đổi, copy `.env.example` thành `.env.local`, sửa `EXPO_PUBLIC_API_URL` rồi khởi động lại Expo. Khi chạy trên điện thoại thật, dùng IP LAN của máy chạy backend.
-4. Nếu trước đây đã đặt AsyncStorage key `api_base_url`, giá trị đó được ưu tiên hơn biến môi trường. Xóa key này khi muốn dùng cấu hình `.env.local`.
+3. Khi chạy local, app dùng Express ở cổng `3001` và Node Core ở cổng `4000`. Trên trình duyệt mặc định là `localhost`. Expo trên điện thoại dùng địa chỉ LAN của máy chạy Metro. Nếu backend chạy trên máy khác, đặt `EXPO_PUBLIC_API_URL` và `EXPO_PUBLIC_NODE_CORE_URL` trong `.env.local` rồi khởi động lại Expo.
+4. APK Android ký release dùng `https://api.nexusport.io.vn` và `https://node-core-production.up.railway.app`. Có thể build APK trên cùng máy đang dùng `.env.local` để phát triển.
 
 Các lệnh khởi động dùng `scripts/expo.cjs` để bỏ HTTP metadata cache của Expo SDK 54, tránh lỗi `Body is unusable: Body has already been read` khi cache không ghi/đọc được. Metro vẫn giữ cache và app vẫn gọi backend bình thường. Không cần sửa `node_modules` hoặc cài lại thư viện. Nếu không kết nối được dịch vụ Expo, dùng `npm run web:offline`; chế độ này chỉ bỏ các request của công cụ Expo, không tắt request backend trong app.
 
@@ -59,7 +59,7 @@ App gọi `/api/driver-bookings/feed` mỗi 8 giây khi đang mở. Thông báo 
 
 ## Smart Route (NXP-114)
 
-Chạy Node Core tại `http://localhost:4000` cùng database PostgreSQL và các migration Smart Route; cấu hình `EXPO_PUBLIC_NODE_CORE_URL` trong `.env.local` (điện thoại thật dùng IP LAN). AsyncStorage `node_core_base_url` được ưu tiên nếu có. Các request dùng JWT phiên đăng nhập hiện tại; Node Core xác định hồ sơ Driver qua `drivers.user_id`.
+Chạy Node Core tại `http://localhost:4000` cùng database PostgreSQL và các migration Smart Route. Nếu Node Core có địa chỉ khác, đặt `EXPO_PUBLIC_NODE_CORE_URL` trong `.env.local`. Các request dùng JWT của phiên đăng nhập hiện tại. Node Core xác định hồ sơ Driver qua `drivers.user_id`.
 
 Mở **Smart Route** từ trang chủ hoặc **Booking → container → Smart Route**. Tuyến luôn được giới hạn theo booking và container; sau khi Gate xác nhận xe qua cổng, app lấy Operation Order và Yard Location qua `/api/v1/drivers/me/routes`. Sơ đồ hiển thị đường nội bộ, các Block/Slot, sức chứa ô, tuyến khả dụng và khu vực hạn chế/ùn tắc. Đây là bản đồ bãi theo mốc xác nhận, không phải định vị GPS.
 

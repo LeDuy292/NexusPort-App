@@ -15,6 +15,7 @@ function createHarness(fetchHandler, options = {}) {
   };
   const context = vm.createContext({
     Error, Headers, URL, URLSearchParams, AbortController, setTimeout, clearTimeout,
+    __DEV__: options.dev ?? true,
     process: { env: options.env || {} },
     fetch: async (url, options) => {
       requests.push({ url, options });
