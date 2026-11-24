@@ -177,6 +177,30 @@ test("Android emulator fallback uses the host bridge instead of device localhost
   assert.equal(await harness.load("src/config/api.ts").getApiBaseUrl(), "http://10.0.2.2:3001");
 });
 
+test("local web uses local ports even if an older setup configured the deployed services", async () => {
+  const harness = createHarness(async () => reply({}), { env: {
+    EXPO_PUBLIC_API_URL: "https://api.nexusport.io.vn/api/",
+    EXPO_PUBLIC_NODE_CORE_URL: "https://node-core-production.up.railway.app/api/v1/",
+  } });
+  harness.values.set("api_base_url", "https://api.nexusport.io.vn");
+  harness.values.set("node_core_base_url", "https://node-core-production.up.railway.app");
+  const config = harness.load("src/config/api.ts");
+  assert.equal(await config.getApiBaseUrl(), "http://localhost:3001");
+  assert.equal(await config.getNodeCoreBaseUrl(), "http://localhost:4000");
+});
+
+test("Android release uses deployed Express and Node Core with the local .env and storage present", async () => {
+  const harness = createHarness(async () => reply({ data: { token: "token", user: driver } }), {
+    platform: "android", dev: false, hostUri: "192.168.1.42:8081",
+    env: { EXPO_PUBLIC_API_URL: "http://localhost:3001", EXPO_PUBLIC_NODE_CORE_URL: "http://localhost:4000" },
+  });
+  harness.values.set("api_base_url", "http://old-lan-host:3001");
+  harness.values.set("node_core_base_url", "http://old-lan-host:4000");
+  await harness.load(authPath).login("driver01", "password", "Driver");
+  assert.equal(harness.requests[0].url, "https://api.nexusport.io.vn/api/auth/login");
+  assert.equal(await harness.load("src/config/api.ts").getNodeCoreBaseUrl(), "https://node-core-production.up.railway.app");
+});
+
 test("Expo host replaces a stale endpoint from the removed server-settings screen", async () => {
   const harness = createHarness(async () => reply({}), {platform: "android", hostUri: "192.168.1.42:8081"});
   harness.values.set("api_base_url", "http://localhost:3001");

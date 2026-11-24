@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 
-// Set EXPO_PUBLIC_API_URL to the backend origin (use the computer's LAN IP on a phone).
+// Use Metro's LAN host when testing on a physical device.
 function expoOrigin(port: number): string | null {
   const hostUri = Constants.expoConfig?.hostUri;
   if (hostUri) {
@@ -18,16 +18,45 @@ function expoOrigin(port: number): string | null {
 }
 const localOrigin = (port: number) => `http://${Platform.OS === "android" ? "10.0.2.2" : "localhost"}:${port}`;
 
-export async function getApiBaseUrl(): Promise<string> {
-  const override = await AsyncStorage.getItem("api_base_url");
-  return (process.env.EXPO_PUBLIC_API_URL?.trim() || expoOrigin(3001) || override || localOrigin(3001))
-    .trim().replace(/\/+$/, "").replace(/\/api$/, "");
+interface ServiceOrigin {
+  port: number;
+  deployedOrigin: string;
+  localOverride?: string;
+  storageKey: string;
+  pathSuffix: RegExp;
 }
 
-// Node Core owns the canonical Gate / Operation Order / Yard route data.
-// Configure the LAN origin separately when running on a physical phone.
-export async function getNodeCoreBaseUrl(): Promise<string> {
-  const override = await AsyncStorage.getItem("node_core_base_url");
-  const base = process.env.EXPO_PUBLIC_NODE_CORE_URL?.trim() || expoOrigin(4000) || override || localOrigin(4000);
-  return base.trim().replace(/\/+$/, "").replace(/\/api\/v1$/, "");
+async function resolveOrigin({ port, deployedOrigin, localOverride, storageKey, pathSuffix }: ServiceOrigin): Promise<string> {
+  if (Platform.OS !== "web" && !__DEV__) return deployedOrigin;
+
+  const normalize = (origin: string) => origin.trim().replace(/\/+$/, "").replace(pathSuffix, "");
+  const configuredOrigin = normalize(localOverride ?? "");
+  if (configuredOrigin && configuredOrigin !== deployedOrigin) return configuredOrigin;
+
+  const metroOrigin = expoOrigin(port);
+  if (metroOrigin) return metroOrigin;
+
+  const savedOrigin = normalize((await AsyncStorage.getItem(storageKey)) ?? "");
+  return savedOrigin && savedOrigin !== deployedOrigin ? savedOrigin : localOrigin(port);
+}
+
+export function getApiBaseUrl(): Promise<string> {
+  return resolveOrigin({
+    port: 3001,
+    deployedOrigin: "https://api.nexusport.io.vn",
+    localOverride: process.env.EXPO_PUBLIC_API_URL,
+    storageKey: "api_base_url",
+    pathSuffix: /\/api$/,
+  });
+}
+
+// Node Core owns the canonical Gate, Operation Order and Yard route data.
+export function getNodeCoreBaseUrl(): Promise<string> {
+  return resolveOrigin({
+    port: 4000,
+    deployedOrigin: "https://node-core-production.up.railway.app",
+    localOverride: process.env.EXPO_PUBLIC_NODE_CORE_URL,
+    storageKey: "node_core_base_url",
+    pathSuffix: /\/api\/v1$/,
+  });
 }
