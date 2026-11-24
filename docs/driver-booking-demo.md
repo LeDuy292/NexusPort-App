@@ -28,6 +28,6 @@ Booking hiện có của `tiendriver`: `BK-E50809A35061430A`, xe `47K1-137.87`, 
 
 ## Bước tiếp theo đề xuất
 
-Booking duyệt → kiểm tra thanh toán/điều kiện sẵn sàng → tài xế xác nhận nhận việc → hiển thị e-Pass đúng booking → Gate In → đi đến bãi → xác nhận giao/nhận container → Gate Out → lịch sử/EIR.
+Booking đã duyệt → tài xế báo đã đến cổng và sẵn sàng → nhận lệnh vào cổng → Gate In → đi đến bãi → xác nhận giao/nhận container → Gate Out → lịch sử/EIR.
 
 Luồng chuyến xe Express và booking C# hiện là hai nguồn riêng. Bước tiếp theo cần dùng booking ID làm liên kết xuyên suốt, tạo/cập nhật chuyến từ booking đã đủ điều kiện; không coi một booking đã duyệt tự động là một chuyến xe đã được tạo.
