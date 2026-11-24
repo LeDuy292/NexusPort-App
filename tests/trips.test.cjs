@@ -91,52 +91,34 @@ test("getTransportOrders falls back to getMyTrips if 404 endpoint occurs", async
   assert.equal(result.trips[0].id, "trip-uuid-101");
 });
 
-test("acknowledgeTrip transitions trip from Assigned to Acknowledged", async () => {
-  const acknowledgedTrip = { ...mockTrip, status: "Acknowledged", timeline: { acknowledged: "2026-10-25T01:00:00Z" } };
-  const harness = createHarness(async (url, options) => {
-    assert.equal(url, "http://localhost:3001/api/driver/trips/trip-uuid-101/acknowledge");
-    assert.equal(options.method, "PATCH");
-    assert.equal(options.headers.get("Authorization"), "Bearer jwt-driver-token");
-    return new Response(JSON.stringify({ success: true, data: { trip: acknowledgedTrip } }), { status: 200 });
-  });
-  harness.values.set("user", JSON.stringify(user));
-
-  const service = harness.load("src/features/driver/services/tripService.ts");
-  const result = await service.acknowledgeTrip("trip-uuid-101");
-
-  assert.equal(result.status, "Acknowledged");
-  assert.equal(result.timeline.acknowledged, "2026-10-25T01:00:00Z");
+test("new and legacy pre-entry trips begin at arrival for both booking types", () => {
+  const { buildTripFlow, dispatchBadge, isBeforeGateIn } = createHarness().load("src/features/driver/tripFlow.ts");
+  for (const status of ["Assigned", "Acknowledged", "Vehicle Picked Up", "Container Picked Up"]) {
+    assert.equal(isBeforeGateIn(status), true);
+    for (const bookingType of ["Pickup", "Dropoff"]) {
+      const trip = { ...mockTrip, status, bookingType };
+      const booking = { dispatch: { status: "withdrawn" } };
+      const flow = buildTripFlow(trip, booking);
+      assert.equal(flow.current.key, "arrive");
+      assert.equal(dispatchBadge(trip, booking).label, "Chưa báo đến cổng");
+      const stepKeys = Array.from(flow.phases.flatMap(phase => phase.steps.map(step => step.key)));
+      assert.deepEqual(stepKeys, ["arrive", "call", "gatein", "yard", "handover", "gateout", "finish"]);
+    }
+  }
 });
 
-test("pickupVehicle records vehicle pickup with optional inspection note", async () => {
-  const pickedUpTrip = { ...mockTrip, status: "Vehicle Picked Up", note: "Xe đã sẵn sàng" };
-  const harness = createHarness(async (url, options) => {
-    assert.equal(url, "http://localhost:3001/api/driver/trips/trip-uuid-101/pickup-vehicle");
-    assert.equal(options.method, "PATCH");
-    assert.deepEqual(JSON.parse(options.body), { note: "Xe đã sẵn sàng" });
-    return new Response(JSON.stringify({ success: true, data: { trip: pickedUpTrip } }), { status: 200 });
-  });
-  harness.values.set("user", JSON.stringify(user));
-
-  const service = harness.load("src/features/driver/services/tripService.ts");
-  const result = await service.pickupVehicle("trip-uuid-101", "Xe đã sẵn sàng");
-
-  assert.equal(result.status, "Vehicle Picked Up");
-});
-
-test("pickupContainer transitions trip to Container Picked Up", async () => {
-  const pickedContTrip = { ...mockTrip, status: "Container Picked Up" };
-  const harness = createHarness(async (url, options) => {
-    assert.equal(url, "http://localhost:3001/api/driver/trips/trip-uuid-101/pickup-container");
-    assert.equal(options.method, "PATCH");
-    return new Response(JSON.stringify({ success: true, data: { trip: pickedContTrip } }), { status: 200 });
-  });
-  harness.values.set("user", JSON.stringify(user));
-
-  const service = harness.load("src/features/driver/services/tripService.ts");
-  const result = await service.pickupContainer("trip-uuid-101");
-
-  assert.equal(result.status, "Container Picked Up");
+test("arrival waits for the call and recorded gate passage before work in the yard", () => {
+  const { buildTripFlow, isBeforeGateIn } = createHarness().load("src/features/driver/tripFlow.ts");
+  for (const [status, nextStep] of [["ready", "call"], ["called", "call"], ["acknowledged", "gatein"]]) {
+    const booking = { dispatch: { status } };
+    assert.equal(buildTripFlow(mockTrip, booking).current.key, nextStep);
+  }
+  assert.equal(isBeforeGateIn("Gate In"), false);
+  assert.equal(buildTripFlow({ ...mockTrip, status: "Gate In" }).current.key, "yard");
+  for (const [bookingType, prefix] of [["Pickup", "Nhận"], ["Dropoff", "Giao"]]) {
+    const flow = buildTripFlow({ ...mockTrip, status: "Arrived at Yard", bookingType });
+    assert.equal(flow.current.label, prefix + " container tại bãi");
+  }
 });
 
 test("gateIn and arriveAtYard update yard arrival progress", async () => {

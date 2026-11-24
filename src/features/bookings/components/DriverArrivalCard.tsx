@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
-import { useRouter } from "expo-router";
 import { useBookings } from "../BookingProvider";
 import { confirmPassedGate, updateBookingArrival } from "../bookingService";
 import { bookingTime, isApproved } from "../bookingPresentation";
@@ -10,7 +9,6 @@ import { ui } from "./BookingUI";
 const labels = { arrived: "Đã đến cổng · chưa sẵn sàng", ready: "Đã đến cổng · chờ điều độ gọi", called: "Điều độ đang gọi bạn", acknowledged: "Bạn đã nhận lệnh gọi", withdrawn: "Cần xác nhận lại" };
 
 export function DriverArrivalCard({ booking, disabled = false, compact = false }: { booking: DriverBooking; disabled?: boolean; compact?: boolean }) {
-  const router = useRouter();
   const { reload, realtimeConnected, error: feedError } = useBookings();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,14 +33,11 @@ export function DriverArrivalCard({ booking, disabled = false, compact = false }
       style={{ padding: 14, borderRadius: 12, backgroundColor: secondary ? "#e2e8f0" : "#c45b22", opacity: busy || disabled || feedError || unavailable ? 0.45 : 1 }}>
       <Text style={{ color: secondary ? "#334155" : "white", textAlign: "center", fontWeight: "700" }}>{title}</Text>
     </TouchableOpacity>;
-  // 3 bước: xác nhận chuyến → báo đã đến cổng → điều độ gọi (tự động nếu bãi còn chỗ) và nhận lệnh
-  const tripConfirmed = booking.coordination?.tripConfirmed !== false;
   const arrivedDone = Boolean(dispatch);
-  const calledDone = ["called", "acknowledged"].includes(dispatch?.status || "") || dispatch?.action === "gate_admitted";
+  const callAcknowledged = dispatch?.status === "acknowledged" || dispatch?.action === "gate_admitted";
   const steps = [
-    { title: "1. Xác nhận chuyến vận chuyển", done: tripConfirmed, current: !tripConfirmed },
-    { title: "2. Báo đã đến cổng & sẵn sàng", done: arrivedDone, current: tripConfirmed && !arrivedDone },
-    { title: "3. Điều độ gọi vào cổng · bạn nhận lệnh", done: dispatch?.status === "acknowledged" || dispatch?.action === "gate_admitted", current: arrivedDone && !calledDone },
+    { title: "Báo đã đến cổng & sẵn sàng", done: arrivedDone, current: !arrivedDone },
+    { title: "Nhận lệnh vào cổng từ điều độ", done: callAcknowledged, current: arrivedDone && !callAcknowledged },
   ];
   return <View style={[ui.card, { borderColor: dispatch?.status === "called" ? "#ed6026" : "#395d47" }]}>
     <View style={ui.row}>
@@ -53,7 +48,7 @@ export function DriverArrivalCard({ booking, disabled = false, compact = false }
       <Text style={{ fontSize: 15, color: step.done ? "#15803d" : step.current ? "#c45b22" : "#94a3b8" }}>{step.done ? "✓" : step.current ? "●" : "○"}</Text>
       <Text style={{ flex: 1, fontSize: 13, fontWeight: step.current ? "700" : "500", color: step.done ? "#15803d" : step.current ? "#172b3a" : "#64748b" }}>{step.title}</Text>
     </View>)}
-    <Text style={ui.text}>{dispatch?.action === "gate_admitted" ? "Đã được cấp lệnh tại cổng" : dispatch ? labels[dispatch.status] : "Làm lần lượt 3 bước bên dưới. Khi bạn báo đã đến cổng và bãi còn chỗ, hệ thống sẽ tự gọi bạn vào."}</Text>
+    {dispatch && <Text style={ui.text}>{dispatch.action === "gate_admitted" ? "Đã được cấp lệnh tại cổng" : labels[dispatch.status]}</Text>}
     {dispatch && <Text style={ui.muted}>Đến lúc: {bookingTime(dispatch.arrivedAt)}{booking.coordination?.isLate ? " · Đến muộn" : ""}</Text>}
     {booking.dispatch?.status === "withdrawn" && <Text style={{ color: "#a16207" }}>Lịch hoặc phân công đã thay đổi. Kiểm tra lại trước khi xác nhận đến.</Text>}
     {dispatch?.message && <Text style={ui.text}>{dispatch.message}</Text>}
@@ -61,14 +56,10 @@ export function DriverArrivalCard({ booking, disabled = false, compact = false }
     {booking.gateEntryOrder?.status === "expired" && <Text style={{ color: "#a16207" }}>Lệnh vào cổng đã hết hạn. Chờ điều độ gọi lại; lịch hẹn vẫn được giữ.</Text>}
     {dispatch?.holdUntil && booking.coordination?.isHeld && <Text style={{ color: "#a16207" }}>Chờ dự kiến đến: {bookingTime(dispatch.holdUntil)}</Text>}
     {!dispatch && <>
-      <Text style={ui.muted}>Đến đúng khung giờ hẹn có thể quét tại cổng vào nếu bãi còn chỗ. Nếu đến ngoài khung giờ, hãy báo đã đến để điều độ gọi.</Text>
+      <Text style={ui.muted}>Khi xe đến khu chờ của cảng và có thể vào cổng, hãy báo cho điều độ.</Text>
       {button("Đã đến cổng & sẵn sàng", "arrive", !booking.coordination?.canArrive)}
-      {!booking.coordination?.canArrive && <Text style={ui.muted}>{booking.coordination?.tripConfirmed === false ? "Hãy xác nhận chuyến vận chuyển trước, sau đó mới báo đã đến cổng." : "Có thể xác nhận từ 3 ngày trước giờ hẹn."}</Text>}
+      {!booking.coordination?.canArrive && <Text style={ui.muted}>Có thể xác nhận từ 3 ngày trước giờ hẹn.</Text>}
     </>}
-    {!dispatch && booking.coordination?.tripConfirmed === false && <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(driver)/trips" as any)}
-      style={{ padding: 14, borderRadius: 12, backgroundColor: "#172b3a" }}>
-      <Text style={{ color: "white", textAlign: "center", fontWeight: "700" }}>Mở Chuyến vận chuyển để xác nhận</Text>
-    </TouchableOpacity>}
     {dispatch?.status === "ready" && button("Tạm thời chưa sẵn sàng", "not-ready", false, true)}
     {dispatch?.status === "arrived" && button("Tôi đã sẵn sàng", "ready")}
     {booking.gateEntryOrder?.status === "active" && !["checked_in", "completed"].includes(String(booking.status || "").toLowerCase()) &&
@@ -80,7 +71,6 @@ export function DriverArrivalCard({ booking, disabled = false, compact = false }
       <Text style={{ color: "#9a3412" }}>Phản hồi trước: {bookingTime(dispatch.callExpiresAt || "")}</Text>
       {button("Tôi đã nhận lệnh gọi", "acknowledge", !booking.coordination?.canAcknowledge)}
     </>}
-    <Text style={ui.muted}>Xác nhận đến và nhận lệnh gọi chưa phải xác nhận xe đã vào cổng. Tiếp tục làm theo hướng dẫn của nhân viên cảng.</Text>
     {busy && <ActivityIndicator color="#ff682c" />}
     {error && <Text accessibilityRole="alert" style={{ color: "#b91c1c" }}>{error}</Text>}
   </View>;
