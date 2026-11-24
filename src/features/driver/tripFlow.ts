@@ -3,14 +3,16 @@ import type { TripDetail, Trip } from "./services/tripService";
 
 /**
  * Luồng một chuyến vận chuyển khớp với lệnh điều phối xe bên điều độ:
- *   Chuẩn bị (tài xế) → Vào cổng (báo đến · điều độ gọi · Gate In) → Trong cảng (bãi) → Ra cảng (Gate Out · trả xe).
+ *   Báo đến cổng → Nhận lệnh điều độ → Qua cổng → Giao nhận tại bãi → Ra cảng.
  */
 
+const waitingForEntry = { label: "Chờ vào cảng", color: "#0369a1", icon: "boom-gate-outline" };
+
 export const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
-  Assigned: { label: "Chờ bạn xác nhận", color: "#0369a1", icon: "clipboard-check-outline" },
-  Acknowledged: { label: "Đã nhận chuyến", color: "#7c3aed", icon: "hand-okay" },
-  "Vehicle Picked Up": { label: "Đã lấy xe", color: "#a16207", icon: "truck-outline" },
-  "Container Picked Up": { label: "Đã lấy container", color: "#a16207", icon: "package-variant" },
+  Assigned: waitingForEntry,
+  Acknowledged: waitingForEntry,
+  "Vehicle Picked Up": waitingForEntry,
+  "Container Picked Up": waitingForEntry,
   "Gate In": { label: "Đã qua cổng vào", color: "#ff682c", icon: "boom-gate-up-outline" },
   "In Transit": { label: "Đang di chuyển trong cảng", color: "#ff682c", icon: "truck-fast" },
   "Arrived at Yard": { label: "Đã đến bãi", color: "#15803d", icon: "map-marker-check" },
@@ -21,11 +23,15 @@ export const STATUS_CONFIG: Record<string, { label: string; color: string; icon:
   Cancelled: { label: "Đã hủy", color: "#b91c1c", icon: "close-circle" },
 };
 
-export const STATUS_ORDER: Record<string, number> = {
-  Assigned: 0, Acknowledged: 1, "Vehicle Picked Up": 2, "Container Picked Up": 3,
-  "Gate In": 4, "In Transit": 5, "Arrived at Yard": 6, "Container Delivered": 7,
-  "Gate Out Completed": 8, "Vehicle Returned": 9, Completed: 10,
+const STATUS_ORDER: Record<string, number> = {
+  Assigned: 0, Acknowledged: 0, "Vehicle Picked Up": 0, "Container Picked Up": 0,
+  "Gate In": 1, "In Transit": 2, "Arrived at Yard": 3, "Container Delivered": 4,
+  "Gate Out Completed": 5, "Vehicle Returned": 6, Completed: 7,
 };
+
+export function isBeforeGateIn(status: string) {
+  return STATUS_ORDER[status] === 0;
+}
 
 export type FlowStepState = "done" | "current" | "todo";
 export interface FlowStep {
@@ -46,26 +52,20 @@ export function buildTripFlow(trip: TripLike, booking?: DriverBooking | null): {
   const order = STATUS_ORDER[trip.status] ?? -1;
   const dispatch = booking?.dispatch && booking.dispatch.status !== "withdrawn" ? booking.dispatch : null;
   const entry = booking?.gateEntryOrder;
-  const gateOpenedByDispatch = dispatch?.status === "acknowledged" || dispatch?.action === "gate_admitted";
+  const hasEntryPermission = entry?.status === "active" || dispatch?.status === "acknowledged" || dispatch?.action === "gate_admitted";
   const isPickup = String(trip.bookingType || "").toLowerCase() === "pickup";
-  const t = trip.timeline || ({} as NonNullable<TripLike["timeline"]>);
+  const t = trip.timeline || {};
 
   const doneFlags: Record<string, boolean> = {
-    confirm: order >= 1,
-    vehicle: order >= 2,
-    container: order >= 3,
-    arrive: Boolean(dispatch) || order >= 4,
-    call: gateOpenedByDispatch || order >= 4,
-    gatein: order >= 4,
-    yard: order >= 6,
-    handover: order >= 7,
-    gateout: order >= 8,
-    finish: order >= 10,
+    arrive: Boolean(dispatch) || hasEntryPermission || order >= STATUS_ORDER["Gate In"],
+    call: hasEntryPermission || order >= STATUS_ORDER["Gate In"],
+    gatein: order >= STATUS_ORDER["Gate In"],
+    yard: order >= STATUS_ORDER["Arrived at Yard"],
+    handover: order >= STATUS_ORDER["Container Delivered"],
+    gateout: order >= STATUS_ORDER["Gate Out Completed"],
+    finish: order >= STATUS_ORDER.Completed,
   };
   const defs: { phase: string; key: string; label: string; actor: string; at?: string | null }[] = [
-    { phase: "Chuẩn bị · Tài xế", key: "confirm", label: "Xác nhận chuyến", actor: "Tài xế", at: t.acknowledged },
-    { phase: "Chuẩn bị · Tài xế", key: "vehicle", label: "Lấy xe", actor: "Tài xế", at: t.vehiclePickedUp },
-    { phase: "Chuẩn bị · Tài xế", key: "container", label: isPickup ? "Chuẩn bị nhận container" : "Lấy container", actor: "Tài xế", at: t.containerPickedUp },
     { phase: "Vào cổng · Điều độ & cổng", key: "arrive", label: "Báo đã đến cổng", actor: "Tài xế", at: dispatch?.arrivedAt },
     { phase: "Vào cổng · Điều độ & cổng", key: "call", label: "Điều độ gọi vào cổng · bạn nhận lệnh", actor: "Điều độ", at: dispatch?.acknowledgedAt || entry?.issuedAt },
     { phase: "Vào cổng · Điều độ & cổng", key: "gatein", label: "Qua cổng vào (Gate In)", actor: "Cổng", at: t.gateIn },
@@ -80,12 +80,10 @@ export function buildTripFlow(trip: TripLike, booking?: DriverBooking | null): {
   if (!cancelled) currentKey = defs.find((d) => !doneFlags[d.key])?.key || null;
 
   const hintFor = (key: string): string | undefined => {
-    if (key === "confirm") return "Bấm \"Xác nhận nhận chuyến\" ở cuối màn hình.";
-    if (key === "vehicle") return "Nhận xe rồi bấm xác nhận.";
-    if (key === "container") return isPickup ? "Chuẩn bị giấy tờ, đến cổng cảng." : "Nhận container rồi bấm xác nhận, sau đó đi tới cổng cảng.";
-    if (key === "arrive") return booking?.coordination?.canArrive ? "Đến cổng cảng rồi bấm \"Đã đến cổng & sẵn sàng\" ở thẻ Lệnh điều phối." : "Báo đã đến cổng ở thẻ Lệnh điều phối khi đến gần giờ hẹn.";
+    if (key === "arrive") return booking ? "Khi đến khu chờ tại cổng, bấm \"Đã đến cổng & sẵn sàng\" ở thẻ Lệnh điều phối." : "Chờ lịch hẹn được liên kết với chuyến này.";
     if (key === "call") {
       if (dispatch?.status === "called") return `Điều độ đã gọi bạn. Nhận lệnh trước ${time(dispatch.callExpiresAt) || "hạn phản hồi"}.`;
+      if (dispatch?.status === "arrived") return "Bấm \"Tôi đã sẵn sàng\" khi bạn có thể vào cổng.";
       if (dispatch?.status === "ready") return "Đang chờ điều độ gọi. Bãi còn chỗ thì hệ thống tự gọi bạn.";
       return "Chờ điều độ gọi vào cổng.";
     }
@@ -118,11 +116,11 @@ export function dispatchBadge(trip: TripLike, booking?: DriverBooking | null): {
   if (!booking || ["Completed", "Cancelled"].includes(trip.status)) return null;
   const order = STATUS_ORDER[trip.status] ?? 0;
   const dispatch = booking.dispatch && booking.dispatch.status !== "withdrawn" ? booking.dispatch : null;
-  if (order >= 4) return { label: "Đã vào cảng", color: "#15803d" };
+  if (order >= STATUS_ORDER["Gate In"]) return { label: "Đã vào cảng", color: "#15803d" };
   if (booking.gateEntryOrder?.status === "active" || dispatch?.action === "gate_admitted") return { label: "Được phép vào cổng", color: "#15803d" };
   if (dispatch?.status === "called") return { label: "Điều độ đang gọi bạn", color: "#c2410c" };
   if (dispatch?.status === "acknowledged") return { label: "Đã nhận lệnh gọi", color: "#0f766e" };
-  if (dispatch?.status === "ready" || dispatch?.status === "arrived") return { label: "Chờ điều độ gọi", color: "#2563eb" };
-  if (order < 1) return { label: "Chờ xác nhận chuyến", color: "#a16207" };
+  if (dispatch?.status === "ready") return { label: "Chờ điều độ gọi", color: "#2563eb" };
+  if (dispatch?.status === "arrived") return { label: "Đã đến cổng · chưa sẵn sàng", color: "#a16207" };
   return { label: "Chưa báo đến cổng", color: "#64748b" };
 }

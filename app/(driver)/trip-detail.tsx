@@ -6,9 +6,6 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  Modal,
-  TextInput,
-  KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -17,50 +14,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useState } from "react";
 import { useBookings } from "../../src/features/bookings/BookingProvider";
 import { DriverArrivalCard } from "../../src/features/bookings/components/DriverArrivalCard";
-import { STATUS_CONFIG as FLOW_STATUS, STATUS_ORDER as FLOW_ORDER, buildTripFlow } from "../../src/features/driver/tripFlow";
-import {
-  getTransportOrderDetail,
-  acknowledgeTrip,
-  pickupVehicle,
-  pickupContainer,
-  returnVehicle,
-  TripDetail,
-  TripStatus,
-  DeliveryData,
-} from "../../src/features/driver/services/tripService";
-
-// ── Config ────────────────────────────────────────────────────────────────────
-
-const STATUS_CONFIG = FLOW_STATUS;
-
-// Thứ tự timeline để hiển thị progress
-const TIMELINE_STEPS: { status: TripStatus; label: string; timeKey: keyof TripDetail["timeline"] }[] = [
-  { status: "Acknowledged", label: "Xác nhận chuyến", timeKey: "acknowledged" },
-  { status: "Vehicle Picked Up", label: "Lấy xe", timeKey: "vehiclePickedUp" },
-  { status: "Container Picked Up", label: "Lấy container", timeKey: "containerPickedUp" },
-  { status: "In Transit", label: "Gate In & Khởi hành", timeKey: "gateIn" },
-  { status: "Arrived at Yard", label: "Đến Bãi", timeKey: "arrivedAtYard" },
-  { status: "Container Delivered", label: "Giao container", timeKey: "containerDelivered" },
-  { status: "Gate Out Completed", label: "Gate Out", timeKey: "gateOut" },
-  { status: "Completed", label: "Hoàn thành", timeKey: "completed" },
-];
-
-const STATUS_ORDER = FLOW_ORDER;
-
-interface ActionStep {
-  requiredStatus: TripStatus;
-  label: string;
-  icon: string;
-  color: string;
-  needsDeliveryForm?: boolean;
-}
-
-const ACTION_STEPS: ActionStep[] = [
-  { requiredStatus: "Assigned", label: "Xác nhận nhận chuyến", icon: "hand-okay", color: "#0369a1" },
-  { requiredStatus: "Acknowledged", label: "Xác nhận đã lấy xe", icon: "truck-outline", color: "#7c3aed" },
-  { requiredStatus: "Vehicle Picked Up", label: "Xác nhận đã lấy container", icon: "package-variant", color: "#a16207" },
-  { requiredStatus: "Gate Out Completed", label: "Xác nhận trả xe & Hoàn thành", icon: "truck-check-outline", color: "#15803d" },
-];
+import { STATUS_CONFIG, buildTripFlow, isBeforeGateIn } from "../../src/features/driver/tripFlow";
+import { getTransportOrderDetail, returnVehicle, type TripDetail } from "../../src/features/driver/services/tripService";
 
 function formatDateTime(iso?: string) {
   if (!iso) return null;
@@ -79,10 +34,6 @@ export default function TripDetailScreen() {
   const [actionLoading, setActionLoading] = useState(false);
   const bookings = useBookings().feed?.bookings ?? [];
 
-  // Delivery form modal
-  const [showDeliveryForm, setShowDeliveryForm] = useState(false);
-  const [deliveryData, setDeliveryData] = useState<DeliveryData>({});
-
   const load = useCallback(async () => {
     if (!id) return;
     try {
@@ -95,38 +46,21 @@ export default function TripDetailScreen() {
     }
   }, [id]);
 
-  useEffect(() => { load(); }, [load]);
+  const booking = bookings.find((b) => b.id === trip?.bookingId) || null;
+  const bookingStatus = booking?.status;
+  useEffect(() => { void load(); }, [load, bookingStatus]);
 
-  const handleAction = async (step: ActionStep) => {
-    if (!trip) return;
-    if (step.needsDeliveryForm) {
-      setShowDeliveryForm(true);
-      return;
-    }
-    await executeAction(step);
-  };
-
-  const executeAction = async (step: ActionStep, extra?: DeliveryData) => {
+  const finishTrip = async () => {
     if (!trip) return;
     setActionLoading(true);
     try {
-      let updated;
-      switch (step.requiredStatus) {
-        case "Assigned": updated = await acknowledgeTrip(trip.id); break;
-        case "Acknowledged": updated = await pickupVehicle(trip.id); break;
-        case "Vehicle Picked Up": updated = await pickupContainer(trip.id); break;
-        case "Gate Out Completed": updated = await returnVehicle(trip.id); break;
-        default: return;
-      }
-      // Reload full detail để có history mới
+      await returnVehicle(trip.id);
       await load();
-      Alert.alert("Thành công ✓", `${step.label} thành công!`);
+      Alert.alert("Thành công", "Đã xác nhận trả xe và hoàn thành chuyến.");
     } catch (err: any) {
       Alert.alert("Không thể thực hiện", err.message || "Có lỗi xảy ra.");
     } finally {
       setActionLoading(false);
-      setShowDeliveryForm(false);
-      setDeliveryData({});
     }
   };
 
@@ -147,15 +81,10 @@ export default function TripDetailScreen() {
   }
 
   const cfg = STATUS_CONFIG[trip.status] ?? { label: trip.status, color: "#64748b", icon: "information-outline" };
-  const currentOrder = STATUS_ORDER[trip.status] ?? -1;
   const isDone = trip.status === "Completed" || trip.status === "Cancelled";
-
-  // Xác định action step hiện tại
-  const currentAction = ACTION_STEPS.find((s) => s.requiredStatus === trip.status);
-  const booking = bookings.find((b) => b.id === trip.bookingId) || null;
+  const canFinish = trip.status === "Gate Out Completed";
   const flow = buildTripFlow(trip, booking);
-  // Thẻ lệnh điều phối: từ khi tài xế xác nhận chuyến đến trước khi qua cổng vào
-  const showDispatch = Boolean(booking) && currentOrder >= 1 && currentOrder < 4;
+  const history = trip.history?.filter((entry) => !isBeforeGateIn(entry.toStatus)) ?? [];
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f8fafc" }}>
@@ -216,7 +145,7 @@ export default function TripDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Lệnh điều phối xe (khớp với bảng điều phối bên điều độ) */}
-        {showDispatch && booking && <DriverArrivalCard booking={booking} compact />}
+        {booking && isBeforeGateIn(trip.status) && <DriverArrivalCard booking={booking} compact />}
 
         {/* Việc cần làm tiếp theo */}
         {!isDone && flow.current && (
@@ -347,18 +276,18 @@ export default function TripDetailScreen() {
         </View>
 
         {/* History */}
-        {trip.history && trip.history.length > 0 && (
+        {history.length > 0 && (
           <View style={cardStyle}>
             <SectionTitle icon="history" label="Lịch sử trạng thái" color="#64748b" />
             <View style={{ gap: 8, marginTop: 8 }}>
-              {[...trip.history].reverse().map((h) => (
+              {history.reverse().map((h) => (
                 <View key={h.id} style={{ flexDirection: "row", gap: 8 }}>
                   <Text style={{ color: "#64748b", fontSize: 11, width: 80, flexShrink: 0 }}>
                     {formatDateTime(h.changedAt)}
                   </Text>
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: "#0f172a", fontSize: 12 }}>
-                      {h.fromStatus ? `${h.fromStatus} → ` : ""}<Text style={{ fontWeight: "700" }}>{h.toStatus}</Text>
+                      {h.fromStatus && !isBeforeGateIn(h.fromStatus) ? `${h.fromStatus} → ` : ""}<Text style={{ fontWeight: "700" }}>{h.toStatus}</Text>
                     </Text>
                     {h.note ? (
                       <Text style={{ color: "#64748b", fontSize: 11, marginTop: 1 }}>{h.note}</Text>
@@ -379,7 +308,7 @@ export default function TripDetailScreen() {
       </ScrollView>
 
       {/* Action button — cố định ở dưới */}
-      {!isDone && currentAction && (
+      {canFinish && (
         <View
           style={{
             position: "absolute",
@@ -399,7 +328,7 @@ export default function TripDetailScreen() {
           }}
         >
           <TouchableOpacity
-            onPress={() => handleAction(currentAction)}
+            onPress={() => void finishTrip()}
             disabled={actionLoading}
             style={{
               flexDirection: "row",
@@ -408,8 +337,8 @@ export default function TripDetailScreen() {
               gap: 10,
               paddingVertical: 15,
               borderRadius: 16,
-              backgroundColor: actionLoading ? "#cbd5e1" : currentAction.color || "#ff682c",
-              shadowColor: currentAction.color || "#ff682c",
+              backgroundColor: actionLoading ? "#cbd5e1" : "#15803d",
+              shadowColor: "#15803d",
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.25,
               shadowRadius: 8,
@@ -420,9 +349,9 @@ export default function TripDetailScreen() {
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
               <>
-                <MaterialCommunityIcons name={currentAction.icon as any} size={20} color="#ffffff" />
+                <MaterialCommunityIcons name="truck-check-outline" size={20} color="#ffffff" />
                 <Text style={{ color: "#ffffff", fontWeight: "800", fontSize: 15 }}>
-                  {currentAction.label}
+                  Xác nhận trả xe & Hoàn thành
                 </Text>
               </>
             )}
@@ -430,90 +359,6 @@ export default function TripDetailScreen() {
         </View>
       )}
 
-      {/* Delivery Form Modal */}
-      <Modal
-        visible={showDeliveryForm}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowDeliveryForm(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }}
-        >
-          <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.6)" }}>
-            <View
-              style={{
-                backgroundColor: "#ffffff",
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-                padding: 24,
-                gap: 16,
-                borderTopWidth: 1,
-                borderColor: "#e2e8f0",
-              }}
-            >
-              <Text style={{ color: "#0f172a", fontSize: 18, fontWeight: "800" }}>
-                Xác nhận giao container
-              </Text>
-              <Text style={{ color: "#64748b", fontSize: 13 }}>
-                Nhập thông tin giao nhận container (tùy chọn)
-              </Text>
-
-              <DeliveryInput
-                label="Số chì (seal)"
-                placeholder="VD: SL-123456"
-                value={deliveryData.sealNo || ""}
-                onChangeText={(v) => setDeliveryData((d) => ({ ...d, sealNo: v }))}
-              />
-              <DeliveryInput
-                label="Tình trạng container"
-                placeholder="VD: Nguyên chì / Tốt / Móp nhẹ"
-                value={deliveryData.containerCondition || ""}
-                onChangeText={(v) => setDeliveryData((d) => ({ ...d, containerCondition: v }))}
-              />
-              <DeliveryInput
-                label="Người / Đơn vị tiếp nhận"
-                placeholder="VD: Nguyễn Văn B – Bãi A"
-                value={deliveryData.recipientName || ""}
-                onChangeText={(v) => setDeliveryData((d) => ({ ...d, recipientName: v }))}
-              />
-              <DeliveryInput
-                label="Ghi chú"
-                placeholder="Ghi chú thêm (nếu có)"
-                value={deliveryData.note || ""}
-                onChangeText={(v) => setDeliveryData((d) => ({ ...d, note: v }))}
-              />
-
-              <View style={{ flexDirection: "row", gap: 12, marginTop: 6 }}>
-                <TouchableOpacity
-                  onPress={() => { setShowDeliveryForm(false); setDeliveryData({}); }}
-                  style={{ flex: 1, paddingVertical: 14, borderRadius: 14, alignItems: "center", backgroundColor: "#f1f5f9", borderWidth: 1, borderColor: "#e2e8f0" }}
-                >
-                  <Text style={{ color: "#475569", fontWeight: "700" }}>Hủy</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    const action = ACTION_STEPS.find(s => s.requiredStatus === "Arrived at Yard")!;
-                    executeAction(action, deliveryData);
-                  }}
-                  disabled={actionLoading}
-                  style={{ flex: 2, paddingVertical: 14, borderRadius: 14, alignItems: "center", backgroundColor: "#16a34a", flexDirection: "row", justifyContent: "center", gap: 8 }}
-                >
-                  {actionLoading ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <>
-                      <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
-                      <Text style={{ color: "#ffffff", fontWeight: "800", fontSize: 15 }}>Xác nhận giao</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
     </View>
   );
 }
@@ -554,34 +399,6 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
       <Text style={{ color: "#0f172a", fontSize: 13, fontWeight: "700", flex: 2, textAlign: "right" }}>
         {value}
       </Text>
-    </View>
-  );
-}
-
-function DeliveryInput({ label, placeholder, value, onChangeText }: {
-  label: string;
-  placeholder: string;
-  value: string;
-  onChangeText: (v: string) => void;
-}) {
-  return (
-    <View style={{ gap: 6 }}>
-      <Text style={{ color: "#334155", fontSize: 12, fontWeight: "700" }}>{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor="#94a3b8"
-        style={{
-          backgroundColor: "#f8fafc",
-          borderRadius: 12,
-          padding: 12,
-          color: "#0f172a",
-          fontSize: 14,
-          borderWidth: 1,
-          borderColor: "#cbd5e1",
-        }}
-      />
     </View>
   );
 }

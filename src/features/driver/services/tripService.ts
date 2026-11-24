@@ -156,21 +156,6 @@ export async function getTransportOrderDetail(id: string): Promise<TripDetail> {
   }
 }
 
-export async function acknowledgeTrip(id: string): Promise<Trip> {
-  const res = await apiFetch(`/api/driver/trips/${id}/acknowledge`, { method: "PATCH", body: JSON.stringify({}) });
-  return res.data.trip;
-}
-
-export async function pickupVehicle(id: string, note?: string): Promise<Trip> {
-  const res = await apiFetch(`/api/driver/trips/${id}/pickup-vehicle`, { method: "PATCH", body: JSON.stringify({ note }) });
-  return res.data.trip;
-}
-
-export async function pickupContainer(id: string, note?: string): Promise<Trip> {
-  const res = await apiFetch(`/api/driver/trips/${id}/pickup-container`, { method: "PATCH", body: JSON.stringify({ note }) });
-  return res.data.trip;
-}
-
 export async function gateIn(id: string, note?: string): Promise<Trip> {
   const res = await apiFetch(`/api/driver/trips/${id}/gate-in`, { method: "PATCH", body: JSON.stringify({ note }) });
   return res.data.trip;

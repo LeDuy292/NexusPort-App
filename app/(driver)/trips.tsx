@@ -333,7 +333,7 @@ export default function TripsList() {
                       {trip.containerNo || "—"}
                     </Text>
                     <Text style={{ color: "#64748b", fontSize: 12, marginTop: 2, fontWeight: "500" }}>
-                      {trip.tripCode} · {String(trip.bookingType || "").toLowerCase() === "pickup" ? "Lấy container" : String(trip.bookingType || "").toLowerCase() === "dropoff" ? "Giao container" : "—"}
+                      {trip.tripCode} · {String(trip.bookingType || "").toLowerCase() === "pickup" ? "Nhận container tại bãi" : String(trip.bookingType || "").toLowerCase() === "dropoff" ? "Giao container tại bãi" : "—"}
                     </Text>
                   </View>
                   <View
